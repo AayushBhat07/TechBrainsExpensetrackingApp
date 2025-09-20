@@ -309,64 +309,62 @@ export default function Dashboard() {
                   Balance: ${Math.max(0, remainingBudget - 200).toLocaleString()}
                 </span>
               </div>
-            </div>
-          </div>
 
-          {/* AI Insights (moved here under Profile Card) */}
-          <Card className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-semibold" style={{ color: "#2C3E50" }}>
-                  AI Insights
-                </CardTitle>
-                <span className="text-xs" style={{ color: "#7F8C8D" }}>
-                  Beta
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {!latestInsight && (
-                <div
-                  className="rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs text-center"
-                  style={{ color: "#7F8C8D" }}
-                >
-                  {requestedInsight ? "Generating your first insight..." : "Preparing insights..."}
+              {/* Embedded AI Insights inside User Card */}
+              <div className="mt-4 pt-4 border-t border-[#E8E8E8]">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold" style={{ color: "#2C3E50" }}>
+                    AI Insights
+                  </h4>
+                  <span className="text-xs" style={{ color: "#7F8C8D" }}>
+                    Beta
+                  </span>
                 </div>
-              )}
-              <div
-                className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm"
-                style={{ color: "#2C3E50" }}
-              >
-                {latestInsight ? (
-                  <>
-                    <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
-                      Latest insight
-                    </div>
-                    <div className="max-h-40 overflow-auto whitespace-pre-wrap">
-                      {(() => {
-                        if (latestInsight.structured) {
-                          try {
-                            const parsed = JSON.parse(latestInsight.structured);
-                            const score = parsed?.spending_analysis?.overall_health_score;
-                            const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
-                            return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
-                          } catch {
-                            // fall back to raw content
-                          }
-                        }
-                        const raw: string = latestInsight.content || "";
-                        return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
-                      })()}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-xs" style={{ color: "#7F8C8D" }}>
-                    No insights yet. We'll generate them automatically shortly.
+
+                {!latestInsight && (
+                  <div
+                    className="rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs text-center"
+                    style={{ color: "#7F8C8D" }}
+                  >
+                    {requestedInsight ? "Generating your first insight..." : "Preparing insights..."}
                   </div>
                 )}
+
+                <div
+                  className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm mt-2"
+                  style={{ color: "#2C3E50" }}
+                >
+                  {latestInsight ? (
+                    <>
+                      <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
+                        Latest insight
+                      </div>
+                      <div className="max-h-40 overflow-auto whitespace-pre-wrap">
+                        {(() => {
+                          if (latestInsight.structured) {
+                            try {
+                              const parsed = JSON.parse(latestInsight.structured as string);
+                              const score = parsed?.spending_analysis?.overall_health_score;
+                              const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
+                              return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
+                            } catch {
+                              // fall back to raw content
+                            }
+                          }
+                          const raw: string = (latestInsight.content as string) || "";
+                          return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
+                        })()}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-xs" style={{ color: "#7F8C8D" }}>
+                      No insights yet. We'll generate them automatically shortly.
+                    </div>
+                  )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Recent Transactions (accordion-like simple list) */}
           <div className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-5">
