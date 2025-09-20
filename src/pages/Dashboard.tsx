@@ -19,6 +19,8 @@ export default function Dashboard() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // Add: prevent duplicate auto-generation calls
+  const [requestedInsight, setRequestedInsight] = useState(false);
 
   // Shape of group item returned by backend (non-null)
   type GroupListItem = {
@@ -65,6 +67,22 @@ export default function Dashboard() {
     return Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   })();
   const weeklyTrend: Array<number> = [12, 18, 10, 22, 16, 28, 9];
+
+  // Add: auto-generate an insight once on login if none exists yet
+  useEffect(() => {
+    if (user && !requestedInsight && !latestInsight) {
+      setRequestedInsight(true);
+      (async () => {
+        try {
+          await analyzeUser({ promptKind: "spending_analysis" });
+        } catch (e) {
+          console.error("Auto-generate insight failed:", e);
+          // allow retry if it failed
+          setRequestedInsight(false);
+        }
+      })();
+    }
+  }, [user, requestedInsight, latestInsight, analyzeUser]);
 
   if (isLoading) {
     return (
@@ -457,19 +475,15 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
-                className="w-full text-[#2C3E50]"
-                style={{ background: "#F4D03F" }}
-                onClick={async () => {
-                  try {
-                    await analyzeUser({ promptKind: "spending_analysis" });
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              >
-                Generate Insights
-              </Button>
+              {/* Remove manual trigger button; show subtle status instead */}
+              {!latestInsight && (
+                <div
+                  className="rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs text-center"
+                  style={{ color: "#7F8C8D" }}
+                >
+                  {requestedInsight ? "Generating your first insight..." : "Preparing insights..."}
+                </div>
+              )}
               <div
                 className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm"
                 style={{ color: "#2C3E50" }}
@@ -498,7 +512,7 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <div className="text-xs" style={{ color: "#7F8C8D" }}>
-                    No insights yet. Click "Generate Insights" to get personalized guidance.
+                    No insights yet. We'll generate them automatically shortly.
                   </div>
                 )}
               </div>
