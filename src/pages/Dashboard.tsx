@@ -135,15 +135,29 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="hidden md:flex items-center gap-5 text-sm">
-            {["Dashboard", "Transactions", "Budget", "Goals", "Reports", "Settings"].map((item) => (
-              <button
-                key={item}
-                className="px-3 py-1.5 rounded-full hover:bg-white/50 transition"
-                style={{ color: "#2C3E50" }}
-              >
-                {item}
-              </button>
-            ))}
+            {["Dashboard", "Transactions", "Budget", "Goals", "Reports", "Settings"].map((item) => {
+              const path =
+                item === "Dashboard"
+                  ? "/dashboard"
+                  : item === "Transactions"
+                  ? "/transactions"
+                  : item === "Budget" || item === "Reports"
+                  ? "/reports"
+                  : null;
+
+              return (
+                <button
+                  key={item}
+                  className="px-3 py-1.5 rounded-full hover:bg-white/50 transition"
+                  style={{ color: "#2C3E50" }}
+                  onClick={path ? () => navigate(path) : undefined}
+                  aria-disabled={!path}
+                  title={path ? `Go to ${item}` : item}
+                >
+                  {item}
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" className="border-[#E8E8E8] bg-white/60 backdrop-blur-[9px]">
