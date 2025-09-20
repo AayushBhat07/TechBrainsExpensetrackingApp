@@ -18,6 +18,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ArrowRight, Loader2, Mail, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { api } from "@/convex/_generated/api";
+import { useQuery } from "convex/react";
 
 interface AuthProps {
   redirectAfterAuth?: string;
@@ -30,13 +32,19 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const onboardingProfile = useQuery(api.onboarding.getProfile);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      const redirect = redirectAfterAuth || "/";
-      navigate(redirect);
+    if (!authLoading && isAuthenticated && onboardingProfile !== undefined) {
+      // Decide where to go based on onboarding status
+      const base = "/dashboard";
+      const target =
+        !onboardingProfile || !onboardingProfile.onboardingCompleted
+          ? `${base}?onboarding=1`
+          : base;
+      navigate(target);
     }
-  }, [authLoading, isAuthenticated, navigate, redirectAfterAuth]);
+  }, [authLoading, isAuthenticated, onboardingProfile, navigate]);
   const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);

@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { Plus, Users, Receipt, TrendingUp, ArrowRight, Bell, Settings, CheckCircle, Clock } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useState, useEffect } from "react";
 import CreateGroupDialog from "@/components/CreateGroupDialog";
 import JoinGroupDialog from "@/components/JoinGroupDialog";
@@ -15,6 +15,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 export default function Dashboard() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -35,13 +36,16 @@ export default function Dashboard() {
   const groupsRaw = useQuery(api.groups.getUserGroups);
   const onboardingProfile = useQuery(api.onboarding.getProfile);
 
-  // Auto-open onboarding if not completed (once data is loaded)
+  // Remove auto-open onboarding based on profile; open only if URL param present
   useEffect(() => {
-    if (onboardingProfile === undefined) return;
-    if (!onboardingProfile || !onboardingProfile.onboardingCompleted) {
+    const params = new URLSearchParams(location.search);
+    const shouldOpen = params.get("onboarding") === "1";
+    if (shouldOpen) {
       setShowOnboarding(true);
+      // Clean the URL so onboarding doesn't re-open on refresh
+      navigate("/dashboard", { replace: true });
     }
-  }, [onboardingProfile]);
+  }, [location.search, navigate]);
 
   // Ensure non-null list of groups with correct typings
   const validGroups: GroupListItem[] = (groupsRaw ?? []).filter(
