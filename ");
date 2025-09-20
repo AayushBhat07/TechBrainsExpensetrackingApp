@@ -1,0 +1,26 @@
+      if (lastFence !== -1) {
+        raw = raw.slice(0, lastFence);
+      }
+
+      // Remove a leading "json" token if present
+      raw = raw.replace(/^\s*json\s*/i, "");
+
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && parsed.spending_analysis) {
+        structured = JSON.stringify(parsed);
+      }
+    } catch {
+      // leave structured undefined; still store raw content below
+    }
+
+    await ctx.runMutation(internal.aiData.saveInsight, {
+      content,
+      structured,
+      promptKind: args.promptKind ?? "spending_analysis",
+      model: selectedModel,
+    });
+
+    return { ok: true };
+  },
+});
+// ... keep existing code (anything after analyzeUser)

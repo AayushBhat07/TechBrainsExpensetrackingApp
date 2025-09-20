@@ -1,0 +1,6 @@
+- Parse the LLM output safely by first trying JSON.parse directly, then falling back to extracting the first/last curly brace substring.
+- Persist both raw and structured insights for the Dashboard.
+
+After this change, AI Insights will work once you set OPENROUTER_API_KEY in Integrations → OpenRouter.
+
+EDIT FILE

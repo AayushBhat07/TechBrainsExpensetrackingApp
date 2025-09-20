@@ -46,7 +46,7 @@ async function callLLM({
   return content as string;
 }
 
-// Public action: Analyze current user and persist insights
+// Replace analyzeUser implementation to fix parsing and persist insights
 export const analyzeUser = action({
   args: {
     promptKind: v.optional(v.string()), // e.g., "spending_analysis" | "knowledge_gaps" | "motivational" | "predictions"
@@ -64,9 +64,9 @@ export const analyzeUser = action({
     const selectedModel = args.model ?? "mistralai/mistral-7b-instruct";
 
     const systemPrompt =
-      "You are a highly experienced personal financial advisor and behavioral economist. Provide supportive, actionable, and tailored guidance based on user context.";
+      "You are a highly experienced personal financial advisor and behavioral economist. Provide supportive, actionable, and tailored guidance based on user context. Return concise, accurate insights.";
 
-    // Build user prompt requesting strictly-JSON output
+    // Ask for strictly-JSON output
     const userPrompt = [
       "Analyze the following user's financial profile and summarized spending.",
       "",
@@ -76,7 +76,7 @@ export const analyzeUser = action({
       "Return ONLY JSON (no extra commentary) with a single root key 'spending_analysis' containing:",
       "- overall_health_score (1-10)",
       "- overspending_alerts: array of objects with keys:",
-      '  category (string), severity ("low"|"moderate"|"high"), actual_amount (number), recommended_amount (number), percentage_over (number), impact_on_goal (string), personalized_message (string)',
+      "  category (string), severity (low|moderate|high), actual_amount (number), recommended_amount (number), percentage_over (number), impact_on_goal (string), personalized_message (string)",
       "- positive_patterns: array of { category: string, message: string }",
       "- recommendations: array of 3-5 short actionable strings",
     ].join("\n");
@@ -88,25 +88,46 @@ export const analyzeUser = action({
       userPrompt,
     });
 
-    // Try to extract and parse JSON (handle possible code fences)
-    let structured: string | undefined;
-    try {
-      let raw = content.trim();
-      const fenceStart = raw.indexOf("
-");
-      if (fenceStart > 0) {
-        raw = raw.slice(fenceStart + 1);
+    // Robust JSON parse without using code-fence literals
+    const tryParseStructured = (text: string): string | undefined => {
+      const attempt = (s: string) => {
+        try {
+          const parsed = JSON.parse(s);
+          if (parsed && typeof parsed === "object" && (parsed as any).spending_analysis) {
+            return JSON.stringify(parsed);
+          }
+        } catch {
+          // ignore
+        }
+        return undefined;
+      };
+
+      const t = text.trim();
+
+      // 1) Direct parse
+      let structured = attempt(t);
+      if (structured) return structured;
+
+      // 2) Extract JSON substring by braces
+      const first = t.indexOf("{");
+      const last = t.lastIndexOf("}");
+      if (first !== -1 && last > first) {
+        structured = attempt(t.slice(first, last + 1));
+        if (structured) return structured;
       }
-      const fenceEnd = raw.lastIndexOf("
-");
-      if (fenceEnd > 0) {
-        raw = raw.slice(0, fenceEnd);
-      }
-      structured = raw;
-      const parsed = JSON.parse(structured);
-      return parsed;
-    } catch (e) {
-      throw new Error("Failed to parse LLM response as JSON");
-    }
+
+      return undefined;
+    };
+
+    const structured = tryParseStructured(content);
+
+    await ctx.runMutation(internal.aiData.saveInsight, {
+      content,
+      structured,
+      promptKind: args.promptKind ?? "spending_analysis",
+      model: selectedModel,
+    });
+
+    return { ok: true };
   },
 });
