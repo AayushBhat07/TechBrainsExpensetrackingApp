@@ -12,6 +12,7 @@ import JoinGroupDialog from "@/components/JoinGroupDialog";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import FinancialGlassCalendar from "@/components/ui/financial-glass-calendar";
 import Hyperspeed from "@/components/Hyperspeed";
+import GroupsOverviewDialog from "@/components/GroupsOverviewDialog";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function Dashboard() {
@@ -21,7 +22,10 @@ export default function Dashboard() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  // Add: prevent duplicate auto-generation calls
+  // Add: groups modal state
+  const [showGroupsModal, setShowGroupsModal] = useState(false);
+
+  // Track AI insight request state
   const [requestedInsight, setRequestedInsight] = useState(false);
 
   // Shape of group item returned by backend (non-null)
@@ -153,6 +157,10 @@ export default function Dashboard() {
             >
               <Plus className="w-4 h-4 mr-2" />
               New
+            </Button>
+            {/* Add: Open Groups Overview */}
+            <Button variant="outline" className="border-[#E8E8E8] bg-white/60" onClick={() => setShowGroupsModal(true)}>
+              Groups
             </Button>
             <button className="p-2 rounded-full hover:bg-white/60">
               <Bell className="w-5 h-5" style={{ color: "#2C3E50" }} />
@@ -651,6 +659,8 @@ export default function Dashboard() {
         onOpenChange={setShowOnboarding}
         initialProfile={onboardingProfile ?? null}
       />
+      {/* Add: Groups Overview Modal */}
+      <GroupsOverviewDialog open={showGroupsModal} onOpenChange={setShowGroupsModal} />
     </motion.div>
   );
 }
