@@ -46,6 +46,8 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
   const [q3, setQ3] = useState<string>("");
   const [q4, setQ4] = useState<string>("");
   const [q5, setQ5] = useState<string>("");
+  const [qStep, setQStep] = useState<number>(1);
+  const answeredCount = (q1 ? 1 : 0) + (q2 ? 1 : 0) + (q3 ? 1 : 0) + (q4 ? 1 : 0) + (q5 ? 1 : 0);
 
   // Derived archetypes
   const spendingPersonality = useMemo(() => {
@@ -97,6 +99,11 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
       setStep(1);
     }
   }, [open]);
+
+  // Add: reset Step 3 sub-step when entering Step 3
+  useEffect(() => {
+    if (step === 3) setQStep(1);
+  }, [step]);
 
   const next = () => setStep((s) => Math.min(totalSteps, s + 1));
   const back = () => setStep((s) => Math.max(1, s - 1));
@@ -325,124 +332,172 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
             {step === 3 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <h3 className="text-xl font-bold text-[#2C3E50] mb-4">Let's Understand Your Money Personality</h3>
+
+                {/* Sequential questions: one at a time */}
                 <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium text-[#2C3E50] mb-2">
-                      When you see something you want but don't need, you usually...
+                  {qStep === 1 && (
+                    <div>
+                      <div className="text-sm font-medium text-[#2C3E50] mb-2">
+                        When you see something you want but don't need, you usually...
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          "🛑 Think it over for at least 24 hours",
+                          "💳 Buy it if I have the money",
+                          "🔍 Research prices and reviews first",
+                          "❌ Walk away - I'm very disciplined",
+                        ].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setQ1(t)}
+                            className={`rounded-xl border p-3 text-left ${
+                              q1 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        "🛑 Think it over for at least 24 hours",
-                        "💳 Buy it if I have the money",
-                        "🔍 Research prices and reviews first",
-                        "❌ Walk away - I'm very disciplined",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setQ1(t)}
-                          className={`rounded-xl border p-3 text-left ${
-                            q1 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div className="text-sm font-medium text-[#2C3E50] mb-2">How do you currently track your expenses?</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        "📱 I use apps and technology",
-                        "🧾 I keep receipts and check statements",
-                        "🤷 I don't really track them",
-                        "💡 I have a mental budget in my head",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setQ2(t)}
-                          className={`rounded-xl border p-3 text-left ${
-                            q2 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
+                  {qStep === 2 && (
+                    <div>
+                      <div className="text-sm font-medium text-[#2C3E50] mb-2">How do you currently track your expenses?</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          "📱 I use apps and technology",
+                          "🧾 I keep receipts and check statements",
+                          "🤷 I don't really track them",
+                          "💡 I have a mental budget in my head",
+                        ].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setQ2(t)}
+                            className={`rounded-xl border p-3 text-left ${
+                              q2 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div className="text-sm font-medium text-[#2C3E50] mb-2">Your biggest money stress is...</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        "😰 Not knowing where my money goes",
-                        "🎯 Not reaching my financial goals fast enough",
-                        "🚨 Unexpected expenses that blow my budget",
-                        "💸 Spending too much on things I don't need",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setQ3(t)}
-                          className={`rounded-xl border p-3 text-left ${
-                            q3 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
+                  {qStep === 3 && (
+                    <div>
+                      <div className="text-sm font-medium text-[#2C3E50] mb-2">Your biggest money stress is...</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          "😰 Not knowing where my money goes",
+                          "🎯 Not reaching my financial goals fast enough",
+                          "🚨 Unexpected expenses that blow my budget",
+                          "💸 Spending too much on things I don't need",
+                        ].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setQ3(t)}
+                            className={`rounded-xl border p-3 text-left ${
+                              q3 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div className="text-sm font-medium text-[#2C3E50] mb-2">You're most motivated by...</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        "🏆 Achieving goals and milestones",
-                        "📊 Seeing progress and data",
-                        "🎮 Challenges and competitions",
-                        "🧘 Peace of mind and security",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setQ4(t)}
-                          className={`rounded-xl border p-3 text-left ${
-                            q4 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
+                  {qStep === 4 && (
+                    <div>
+                      <div className="text-sm font-medium text-[#2C3E50] mb-2">You're most motivated by...</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          "🏆 Achieving goals and milestones",
+                          "📊 Seeing progress and data",
+                          "🎮 Challenges and competitions",
+                          "🧘 Peace of mind and security",
+                        ].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setQ4(t)}
+                            className={`rounded-xl border p-3 text-left ${
+                              q4 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div className="text-sm font-medium text-[#2C3E50] mb-2">When managing money with others, you prefer...</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[
-                        "📋 Clear rules and shared tracking",
-                        "💬 Regular discussions about spending",
-                        "🏠 Separate accounts, occasional check-ins",
-                        "👑 I prefer to handle finances myself",
-                      ].map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setQ5(t)}
-                          className={`rounded-xl border p-3 text-left ${
-                            q5 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
+                  {qStep === 5 && (
+                    <div>
+                      <div className="text-sm font-medium text-[#2C3E50] mb-2">When managing money with others, you prefer...</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          "📋 Clear rules and shared tracking",
+                          "💬 Regular discussions about spending",
+                          "🏠 Separate accounts, occasional check-ins",
+                          "👑 I prefer to handle finances myself",
+                        ].map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setQ5(t)}
+                            className={`rounded-xl border p-3 text-left ${
+                              q5 === t ? "border-[#2C3E50] bg-white" : "border-[#E8E8E8] bg-white/70"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                  )}
+                </div>
+
+                {/* Inline progress bar for Step 3 */}
+                <div className="mt-5">
+                  <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-black/70 transition-all"
+                      style={{ width: `${(answeredCount / 5) * 100}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-[#7F8C8D] mt-1">
+                    {answeredCount}/5 questions answered
                   </div>
                 </div>
 
                 <div className="mt-6 flex justify-between">
-                  <Button variant="outline" className="border-[#E8E8E8]" onClick={back}>Back</Button>
-                  <Button className="text-[#2C3E50]" style={{ background: "#F4D03F" }} onClick={next} disabled={!q1 || !q2 || !q3 || !q4 || !q5}>
-                    Continue
+                  <Button
+                    variant="outline"
+                    className="border-[#E8E8E8]"
+                    onClick={() => {
+                      if (qStep > 1) setQStep((s) => s - 1);
+                      else back();
+                    }}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    className="text-[#2C3E50]"
+                    style={{ background: "#F4D03F" }}
+                    onClick={() => {
+                      if (qStep < 5) setQStep((s) => s + 1);
+                      else next();
+                    }}
+                    disabled={
+                      (qStep === 1 && !q1) ||
+                      (qStep === 2 && !q2) ||
+                      (qStep === 3 && !q3) ||
+                      (qStep === 4 && !q4) ||
+                      (qStep === 5 && !q5)
+                    }
+                  >
+                    {qStep < 5 ? "Next" : "Continue"}
                   </Button>
                 </div>
               </motion.div>
