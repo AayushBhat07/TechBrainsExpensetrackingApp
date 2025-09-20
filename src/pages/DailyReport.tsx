@@ -75,6 +75,11 @@ export default function DailyReport() {
     URL.revokeObjectURL(url);
   };
 
+  // Add: Export PDF via print dialog
+  const exportPDF = () => {
+    window.print();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen grid place-items-center">
@@ -104,7 +109,7 @@ export default function DailyReport() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex flex-col">
             <div className="text-xs" style={{ color: "#7F8C8D" }}>
-              Home • Reports • Daily Report
+              Home &gt; Reports &gt; Daily Report
             </div>
             <h1 className="text-xl font-bold" style={{ color: "#2C3E50" }}>
               Daily Report – {today}
@@ -169,16 +174,17 @@ export default function DailyReport() {
           </CardHeader>
           <CardContent>
             <div className="rounded-xl border border-[#E8E8E8] bg-white/70 overflow-hidden">
-              <div className="grid grid-cols-5 px-4 py-2 text-xs font-medium" style={{ color: "#7F8C8D" }}>
+              <div className="grid grid-cols-6 px-4 py-2 text-xs font-medium" style={{ color: "#7F8C8D" }}>
                 <div>Time</div>
                 <div>Category</div>
                 <div className="col-span-2">Description</div>
                 <div className="text-right">Amount</div>
+                <div className="text-right">Actions</div>
               </div>
               <Separator />
               <div className="divide-y" style={{ borderColor: "#E8E8E8" }}>
                 {transactions.map((t) => (
-                  <div key={t.id} className="grid grid-cols-5 px-4 py-3 text-sm">
+                  <div key={t.id} className="grid grid-cols-6 px-4 py-3 text-sm">
                     <div style={{ color: "#7F8C8D" }}>{t.time}</div>
                     <div style={{ color: "#2C3E50" }}>{t.category}</div>
                     <div className="col-span-2" style={{ color: "#2C3E50" }}>
@@ -186,6 +192,22 @@ export default function DailyReport() {
                     </div>
                     <div className="text-right font-semibold" style={{ color: "#2C3E50" }}>
                       ${t.amount.toFixed(2)}
+                    </div>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 border-[#E8E8E8] bg-white/60 text-xs"
+                        onClick={() => console.log("Edit", t.id)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 border-red-300 text-red-600 bg-red-50/60 text-xs"
+                        onClick={() => console.log("Delete", t.id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -315,6 +337,9 @@ export default function DailyReport() {
             </Button>
             <Button variant="outline" className="border-[#E8E8E8] bg-white/60" onClick={exportCSV}>
               Export CSV
+            </Button>
+            <Button variant="outline" className="border-[#E8E8E8] bg-white/60" onClick={exportPDF}>
+              Export PDF
             </Button>
           </div>
           <Button
