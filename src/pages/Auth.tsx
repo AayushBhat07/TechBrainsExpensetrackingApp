@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { SignInPage } from "@/components/ui/sign-in";
 import { useAuth } from "@/hooks/use-auth";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -50,18 +51,50 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          Continue as a guest to explore the app. You can complete onboarding on the dashboard.
-        </p>
-        <Button
-          onClick={handleContinueAsGuest}
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? "Continuing..." : "Continue as Guest"}
-        </Button>
+      <div className="w-full max-w-5xl">
+        <SignInPage
+          title={<span className="font-light text-foreground tracking-tighter">Welcome to MoneyTalks</span>}
+          description="Sign in to continue. You can also continue as guest."
+          heroImageSrc="https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=1600&auto=format&fit=crop"
+          testimonials={[
+            {
+              avatarSrc: "https://i.pravatar.cc/100?img=12",
+              name: "Alex Morgan",
+              handle: "@alexm",
+              text: "MoneyTalks keeps our roommate expenses crystal clear.",
+            },
+            {
+              avatarSrc: "https://i.pravatar.cc/100?img=28",
+              name: "Priya Singh",
+              handle: "@priyas",
+              text: "The insights helped me fix my monthly overspending.",
+            },
+            {
+              avatarSrc: "https://i.pravatar.cc/100?img=45",
+              name: "Diego Rivera",
+              handle: "@diegor",
+              text: "Groups and budgets are super intuitive here.",
+            },
+          ]}
+          onSignIn={(e) => {
+            e.preventDefault();
+            toast("Email/password sign-in coming soon.");
+          }}
+          onGoogleSignIn={() => {
+            toast("Google sign-in coming soon.");
+          }}
+          onResetPassword={() => {
+            toast("Password reset coming soon.");
+          }}
+          onCreateAccount={() => {
+            toast("Account creation coming soon.");
+          }}
+        />
+        <div className="mt-6 flex items-center justify-center">
+          <Button onClick={handleContinueAsGuest} disabled={isLoading} className="w-full max-w-md">
+            {isLoading ? "Continuing..." : "Continue as Guest"}
+          </Button>
+        </div>
       </div>
     </div>
   );
