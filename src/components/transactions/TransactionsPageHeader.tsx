@@ -44,6 +44,8 @@ export const TransactionsPageHeader: React.FC = () => {
   const [txTitle, setTxTitle] = useState("");
   const [txAmount, setTxAmount] = useState<number>(0);
   const [txCategory, setTxCategory] = useState("other");
+  // Add: allow choosing to save to a group or not
+  const [saveToGroup, setSaveToGroup] = useState<boolean>(true);
 
   const [bgGroupId, setBgGroupId] = useState<string>("");
   const [bgCategory, setBgCategory] = useState("other");
@@ -59,10 +61,23 @@ export const TransactionsPageHeader: React.FC = () => {
 
   const submitTx = async () => {
     try {
-      if (!txGroupId || !txTitle || !txAmount) {
+      // Adjust validation to respect the toggle
+      if ((saveToGroup && !txGroupId) || !txTitle || !txAmount) {
         toast("Fill all fields for the new transaction.");
         return;
       }
+
+      // If not saving to a group, keep it local (no backend), close dialog
+      if (!saveToGroup) {
+        toast("Saved locally (not added to any group).");
+        setTxOpen(false);
+        setTxTitle("");
+        setTxAmount(0);
+        setTxCategory("other");
+        setTxGroupId("");
+        return;
+      }
+
       // Fetch members for equal split
       const details = await (window as any).convexClient?.query?.(api.groups.getGroupDetails, { groupId: txGroupId });
       // Fallback: use runTime fetch via useQuery is not available here; do a simple equal split assumption:
@@ -275,11 +290,26 @@ export const TransactionsPageHeader: React.FC = () => {
             <DialogTitle>Add Transaction</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
+            {/* Save-to-group toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-[#E8E8E8] bg-white/60 px-3 py-2">
+              <div>
+                <div className="text-sm font-medium">Save to a group</div>
+                <div className="text-xs text-muted-foreground">Turn off for a personal (local) transaction</div>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={saveToGroup}
+                  onChange={(e) => setSaveToGroup(e.target.checked)}
+                />
+              </label>
+            </div>
+
             <div>
               <div className="text-xs text-muted-foreground mb-1">Group</div>
-              <Select value={txGroupId} onValueChange={setTxGroupId}>
+              <Select value={txGroupId} onValueChange={setTxGroupId} disabled={!saveToGroup}>
                 <SelectTrigger className="bg-white/70">
-                  <SelectValue placeholder="Select a group" />
+                  <SelectValue placeholder={saveToGroup ? "Select a group" : "Personal (no group)"} />
                 </SelectTrigger>
                 <SelectContent>
                   {(groups ?? []).map((g: any) => (
