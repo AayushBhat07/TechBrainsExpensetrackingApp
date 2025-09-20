@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { PieChart as PieIcon, BarChart as BarIcon, Calendar as CalendarIcon, TrendingDown } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { DonutChart } from "@/components/charts/DonutChart";
 import { BarChart as BarChartComponent } from "@/components/charts/BarChart";
 import { HeatmapCalendar } from "@/components/charts/HeatmapCalendar";
 
@@ -97,24 +96,24 @@ export const SpendingAnalyticsSection: React.FC = () => {
               <div className="space-y-6">
                 <h3 className="font-semibold text-xl">Spending by Category</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                  <div className="relative">
-                    <DonutChart
+                  <div className="space-y-4">
+                    <BarChartComponent
                       data={categoryData.map((cat) => ({
-                        name: cat.name,
-                        value: cat.amount,
-                        color: cat.color,
-                      }))}
-                      size={280}
-                      innerRadius={90}
+                        category: cat.name,
+                        amount: cat.amount,
+                      })) as any}
+                      xKey="category"
+                      yKey="amount"
+                      color="#3b82f6"
+                      height={320}
                     />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                    <div className="text-center">
                       <div className="text-3xl font-semibold">
                         ${categoryData.reduce((s, c) => s + c.amount, 0).toLocaleString()}
                       </div>
                       <div className="text-sm text-muted-foreground">Total Spent</div>
                     </div>
                   </div>
-
                   <div className="space-y-3">
                     {categoryData.map((category) => (
                       <div
