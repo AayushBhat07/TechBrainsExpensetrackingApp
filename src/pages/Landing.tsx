@@ -49,7 +49,7 @@ export default function Landing() {
               <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
                 <Receipt className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">SplitWise</span>
+              <span className="text-xl font-bold text-gray-900">PayUp</span>
             </div>
             <Button
               onClick={handleGetStarted}
@@ -308,7 +308,7 @@ export default function Landing() {
               <div className="w-6 h-6 bg-gray-900 rounded flex items-center justify-center">
                 <Receipt className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold text-gray-900">SplitWise</span>
+              <span className="font-bold text-gray-900">PayUp</span>
             </div>
             <p className="text-gray-500 text-sm">
               Built with ❤️ for better shared living
