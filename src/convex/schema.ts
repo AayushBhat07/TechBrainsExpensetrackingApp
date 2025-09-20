@@ -164,6 +164,9 @@ const schema = defineSchema(
       debtType: v.optional(v.string()),
       typicalSpending: v.optional(v.number()),
       essentialsPct: v.optional(v.number()),
+      // Add: persisted onboarding progress for resuming
+      onboardingStep: v.optional(v.number()),
+      onboardingQStep: v.optional(v.number()),
       onboardingCompleted: v.optional(v.boolean()),
       completedAt: v.optional(v.number()),
     }).index("by_user", ["userId"]),

@@ -36,6 +36,8 @@ export const saveProfile = mutation({
     debtType: v.optional(v.string()),
     typicalSpending: v.optional(v.number()),
     essentialsPct: v.optional(v.number()),
+    onboardingStep: v.optional(v.number()),
+    onboardingQStep: v.optional(v.number()),
     onboardingCompleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {

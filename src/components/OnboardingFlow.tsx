@@ -93,20 +93,41 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
 
   const saveProfile = useMutation(api.onboarding.saveProfile);
 
+  // Replace: reset step from saved profile when dialog opens
   useEffect(() => {
     if (open) {
-      // reset to step 1 for fresh open
-      setStep(1);
+      const savedStep = Number(initialProfile?.onboardingStep) || 1;
+      setStep(savedStep);
+      // If resuming Step 3, restore its sub-step too
+      if (savedStep === 3) {
+        const savedQ = Number(initialProfile?.onboardingQStep) || 1;
+        setQStep(savedQ);
+      }
     }
-  }, [open]);
+  }, [open, initialProfile]);
 
-  // Add: reset Step 3 sub-step when entering Step 3
+  // Replace: when entering Step 3, ensure qStep uses saved sub-step
   useEffect(() => {
-    if (step === 3) setQStep(1);
-  }, [step]);
+    if (step === 3) {
+      const savedQ = Number(initialProfile?.onboardingQStep) || 1;
+      setQStep(savedQ);
+    }
+  }, [step, initialProfile]);
 
-  const next = () => setStep((s) => Math.min(totalSteps, s + 1));
-  const back = () => setStep((s) => Math.max(1, s - 1));
+  // Replace next/back to persist step progress
+  const next = () =>
+    setStep((s) => {
+      const ns = Math.min(totalSteps, s + 1);
+      void saveProfile({ onboardingStep: ns, onboardingCompleted: false });
+      return ns;
+    });
+
+  const back = () =>
+    setStep((s) => {
+      const ns = Math.max(1, s - 1);
+      void saveProfile({ onboardingStep: ns, onboardingCompleted: false });
+      return ns;
+    });
 
   const handleFinish = async () => {
     try {
@@ -129,6 +150,9 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
         typicalSpending: typicalSpending ? Number(typicalSpending) : undefined,
         essentialsPct,
         onboardingCompleted: true,
+        // Mark as finished for safety; not strictly required, but explicit
+        onboardingStep: totalSteps,
+        onboardingQStep: qStep,
       });
       toast("Onboarding complete! Your personal dashboard is ready.");
       onOpenChange(false);
@@ -476,8 +500,15 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
                     variant="outline"
                     className="border-[#E8E8E8]"
                     onClick={() => {
-                      if (qStep > 1) setQStep((s) => s - 1);
-                      else back();
+                      if (qStep > 1) {
+                        setQStep((s) => {
+                          const ns = s - 1;
+                          void saveProfile({ onboardingStep: 3, onboardingQStep: ns, onboardingCompleted: false });
+                          return ns;
+                        });
+                      } else {
+                        back();
+                      }
                     }}
                   >
                     Back
@@ -486,8 +517,15 @@ export default function OnboardingFlow({ open, onOpenChange, initialProfile }: O
                     className="text-[#2C3E50]"
                     style={{ background: "#F4D03F" }}
                     onClick={() => {
-                      if (qStep < 5) setQStep((s) => s + 1);
-                      else next();
+                      if (qStep < 5) {
+                        setQStep((s) => {
+                          const ns = s + 1;
+                          void saveProfile({ onboardingStep: 3, onboardingQStep: ns, onboardingCompleted: false });
+                          return ns;
+                        });
+                      } else {
+                        next();
+                      }
                     }}
                     disabled={
                       (qStep === 1 && !q1) ||
