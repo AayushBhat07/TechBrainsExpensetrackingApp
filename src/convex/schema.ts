@@ -16,6 +16,33 @@ export const roleValidator = v.union(
 );
 export type Role = Infer<typeof roleValidator>;
 
+// Expense categories
+export const EXPENSE_CATEGORIES = {
+  GROCERIES: "groceries",
+  UTILITIES: "utilities",
+  RENT: "rent",
+  DINING: "dining",
+  TRANSPORTATION: "transportation",
+  ENTERTAINMENT: "entertainment",
+  HOUSEHOLD: "household",
+  HEALTHCARE: "healthcare",
+  OTHER: "other",
+} as const;
+
+export const categoryValidator = v.union(
+  v.literal(EXPENSE_CATEGORIES.GROCERIES),
+  v.literal(EXPENSE_CATEGORIES.UTILITIES),
+  v.literal(EXPENSE_CATEGORIES.RENT),
+  v.literal(EXPENSE_CATEGORIES.DINING),
+  v.literal(EXPENSE_CATEGORIES.TRANSPORTATION),
+  v.literal(EXPENSE_CATEGORIES.ENTERTAINMENT),
+  v.literal(EXPENSE_CATEGORIES.HOUSEHOLD),
+  v.literal(EXPENSE_CATEGORIES.HEALTHCARE),
+  v.literal(EXPENSE_CATEGORIES.OTHER),
+);
+
+export type ExpenseCategory = Infer<typeof categoryValidator>;
+
 const schema = defineSchema(
   {
     // default auth tables using convex auth.
@@ -32,12 +59,89 @@ const schema = defineSchema(
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // add other tables here
+    // Groups for shared expenses (households, roommates, etc.)
+    groups: defineTable({
+      name: v.string(),
+      description: v.optional(v.string()),
+      createdBy: v.id("users"),
+      inviteCode: v.string(),
+      currency: v.optional(v.string()), // USD, EUR, etc.
+    }).index("by_invite_code", ["inviteCode"])
+      .index("by_creator", ["createdBy"]),
 
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    // Group memberships
+    groupMembers: defineTable({
+      groupId: v.id("groups"),
+      userId: v.id("users"),
+      joinedAt: v.number(),
+      isActive: v.boolean(),
+    }).index("by_group", ["groupId"])
+      .index("by_user", ["userId"])
+      .index("by_group_and_user", ["groupId", "userId"]),
+
+    // Expenses
+    expenses: defineTable({
+      groupId: v.id("groups"),
+      title: v.string(),
+      description: v.optional(v.string()),
+      amount: v.number(),
+      category: categoryValidator,
+      paidBy: v.id("users"),
+      receiptUrl: v.optional(v.id("_storage")),
+      date: v.number(),
+      isSettled: v.boolean(),
+    }).index("by_group", ["groupId"])
+      .index("by_payer", ["paidBy"])
+      .index("by_group_and_date", ["groupId", "date"])
+      .index("by_category", ["category"]),
+
+    // Expense splits (who owes what for each expense)
+    expenseSplits: defineTable({
+      expenseId: v.id("expenses"),
+      userId: v.id("users"),
+      amount: v.number(),
+      isPaid: v.boolean(),
+    }).index("by_expense", ["expenseId"])
+      .index("by_user", ["userId"])
+      .index("by_expense_and_user", ["expenseId", "userId"]),
+
+    // Payments/settlements between users
+    payments: defineTable({
+      groupId: v.id("groups"),
+      fromUserId: v.id("users"),
+      toUserId: v.id("users"),
+      amount: v.number(),
+      description: v.optional(v.string()),
+      date: v.number(),
+      relatedExpenses: v.optional(v.array(v.id("expenses"))),
+    }).index("by_group", ["groupId"])
+      .index("by_from_user", ["fromUserId"])
+      .index("by_to_user", ["toUserId"])
+      .index("by_group_and_date", ["groupId", "date"]),
+
+    // Budget goals
+    budgets: defineTable({
+      groupId: v.id("groups"),
+      category: categoryValidator,
+      monthlyLimit: v.number(),
+      month: v.string(), // YYYY-MM format
+      createdBy: v.id("users"),
+    }).index("by_group", ["groupId"])
+      .index("by_group_and_month", ["groupId", "month"])
+      .index("by_group_category_month", ["groupId", "category", "month"]),
+
+    // Payment reminders
+    reminders: defineTable({
+      groupId: v.id("groups"),
+      fromUserId: v.id("users"),
+      toUserId: v.id("users"),
+      amount: v.number(),
+      message: v.optional(v.string()),
+      isRead: v.boolean(),
+      relatedExpenses: v.optional(v.array(v.id("expenses"))),
+    }).index("by_group", ["groupId"])
+      .index("by_to_user", ["toUserId"])
+      .index("by_from_user", ["fromUserId"]),
   },
   {
     schemaValidation: false,
