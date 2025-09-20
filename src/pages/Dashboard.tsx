@@ -443,63 +443,67 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* AI Coach */}
-        <div className="lg:col-span-3 rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold" style={{ color: "#2C3E50" }}>
-              AI Coach
-            </h3>
-            <span className="text-xs" style={{ color: "#7F8C8D" }}>
-              Beta
-            </span>
-          </div>
-          <div className="space-y-3">
-            <Button
-              className="w-full text-[#2C3E50]"
-              style={{ background: "#F4D03F" }}
-              onClick={async () => {
-                try {
-                  await analyzeUser({ promptKind: "spending_analysis" });
-                } catch (e) {
-                  console.error(e);
-                  // Optionally add sonner toast if desired elsewhere
-                }
-              }}
-            >
-              Generate Insights
-            </Button>
-            <div className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm" style={{ color: "#2C3E50" }}>
-              {latestInsight ? (
-                <>
-                  <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
-                    Latest insight
-                  </div>
-                  <div className="max-h-40 overflow-auto whitespace-pre-wrap">
-                    {(() => {
-                      // Prefer structured JSON if available
-                      if (latestInsight.structured) {
-                        try {
-                          const parsed = JSON.parse(latestInsight.structured);
-                          const score = parsed?.spending_analysis?.overall_health_score;
-                          const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
-                          return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
-                        } catch {
-                          // fall back to raw content
+        {/* AI Insights */}
+        <div className="lg:col-span-3">
+          <Card className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-semibold" style={{ color: "#2C3E50" }}>
+                  AI Insights
+                </CardTitle>
+                <span className="text-xs" style={{ color: "#7F8C8D" }}>
+                  Beta
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                className="w-full text-[#2C3E50]"
+                style={{ background: "#F4D03F" }}
+                onClick={async () => {
+                  try {
+                    await analyzeUser({ promptKind: "spending_analysis" });
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+              >
+                Generate Insights
+              </Button>
+              <div
+                className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm"
+                style={{ color: "#2C3E50" }}
+              >
+                {latestInsight ? (
+                  <>
+                    <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
+                      Latest insight
+                    </div>
+                    <div className="max-h-40 overflow-auto whitespace-pre-wrap">
+                      {(() => {
+                        if (latestInsight.structured) {
+                          try {
+                            const parsed = JSON.parse(latestInsight.structured);
+                            const score = parsed?.spending_analysis?.overall_health_score;
+                            const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
+                            return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
+                          } catch {
+                            // fall back to raw content
+                          }
                         }
-                      }
-                      // fallback: trim raw content
-                      const raw: string = latestInsight.content || "";
-                      return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
-                    })()}
+                        const raw: string = latestInsight.content || "";
+                        return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
+                      })()}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs" style={{ color: "#7F8C8D" }}>
+                    No insights yet. Click "Generate Insights" to get personalized guidance.
                   </div>
-                </>
-              ) : (
-                <div className="text-xs" style={{ color: "#7F8C8D" }}>
-                  No insights yet. Click "Generate Insights" to get personalized guidance.
-                </div>
-              )}
-            </div>
-          </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Calendar-ish timeline + Activity feed */}
