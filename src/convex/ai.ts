@@ -51,6 +51,7 @@ export const analyzeUser = action({
   args: {
     promptKind: v.optional(v.string()), // e.g., "spending_analysis" | "knowledge_gaps" | "motivational" | "predictions"
     model: v.optional(v.string()), // override model id if desired
+    userQuestion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -79,6 +80,14 @@ export const analyzeUser = action({
       "  category (string), severity (low|moderate|high), actual_amount (number), recommended_amount (number), percentage_over (number), impact_on_goal (string), personalized_message (string)",
       "- positive_patterns: array of { category: string, message: string }",
       "- recommendations: array of 3-5 short actionable strings",
+      ...(args.userQuestion
+        ? [
+            "",
+            "USER QUESTION:",
+            args.userQuestion,
+            "Incorporate guidance addressing the user question succinctly within 'recommendations'.",
+          ]
+        : []),
     ].join("\n");
 
     const content = await callLLM({
