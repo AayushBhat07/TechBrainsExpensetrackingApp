@@ -117,7 +117,7 @@ export default function Dashboard() {
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)" }} />
 
       {/* Header / Nav */}
-      <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/30 border-b border-[#E8E8E8]">
+      <div className="sticky top-0 z-10 backdrop-blur-[9px] bg-white/30 border-b border-[#E8E8E8]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
