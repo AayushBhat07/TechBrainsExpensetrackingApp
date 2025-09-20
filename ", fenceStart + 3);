@@ -3,7 +3,6 @@
         }
       }
       const parsed = JSON.parse(raw);
-      // Basic shape check
       if (parsed && typeof parsed === "object" && parsed.spending_analysis) {
         structured = JSON.stringify(parsed);
       }

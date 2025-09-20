@@ -49,8 +49,8 @@ async function callLLM({
 // Public action: Analyze current user and persist insights
 export const analyzeUser = action({
   args: {
-    promptKind: v.optional(v.string()), // e.g., "spending_analysis"
-    model: v.optional(v.string()),
+    promptKind: v.optional(v.string()), // e.g., "spending_analysis" | "knowledge_gaps" | "motivational" | "predictions"
+    model: v.optional(v.string()), // override model id if desired
   },
   handler: async (ctx, args) => {
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -64,25 +64,22 @@ export const analyzeUser = action({
     const selectedModel = args.model ?? "mistralai/mistral-7b-instruct";
 
     const systemPrompt =
-      "You are a highly experienced personal financial advisor and behavioral economist. Provide supportive, actionable, and tailored guidance based on user context. Always return valid JSON.";
+      "You are a highly experienced personal financial advisor and behavioral economist. Provide supportive, actionable, and tailored guidance based on user context.";
 
-    const userContextJson = JSON.stringify(context, null, 2);
-
-    const userPrompt = `
-Analyze the following user's financial profile and summarized spending.
-
-USER CONTEXT (JSON):
-${userContextJson}
-
-RESPONSE FORMAT (strict JSON):
-{
-  "analysis": "Comprehensive financial analysis of the user's current situation and spending patterns.",
-  "recommendations": "Actionable, personalized financial recommendations based on the analysis.",
-  "confidence": "Confidence level in the analysis (0-100%)"
-}
-
-Only output valid JSON for the final answer, no extra text.
-`.trim();
+    // Build user prompt requesting strictly-JSON output
+    const userPrompt = [
+      "Analyze the following user's financial profile and summarized spending.",
+      "",
+      "USER CONTEXT (JSON):",
+      JSON.stringify(context, null, 2),
+      "",
+      "Return ONLY JSON (no extra commentary) with a single root key 'spending_analysis' containing:",
+      "- overall_health_score (1-10)",
+      "- overspending_alerts: array of objects with keys:",
+      '  category (string), severity ("low"|"moderate"|"high"), actual_amount (number), recommended_amount (number), percentage_over (number), impact_on_goal (string), personalized_message (string)',
+      "- positive_patterns: array of { category: string, message: string }",
+      "- recommendations: array of 3-5 short actionable strings",
+    ].join("\n");
 
     const content = await callLLM({
       apiKey,
@@ -91,32 +88,25 @@ Only output valid JSON for the final answer, no extra text.
       userPrompt,
     });
 
-    // Try to parse JSON; if fails, still persist raw content for visibility
-    let structured: string | undefined = undefined;
+    // Try to extract and parse JSON (handle possible code fences)
+    let structured: string | undefined;
     try {
-      const parsed = JSON.parse(content);
-      structured = JSON.stringify(parsed);
-    } catch {
-      // Leave structured undefined; consumer can show raw content
-    }
-
-    // Persist the result as a user insight (best-effort)
-    try {
-      await ctx.runMutation(internal.aiData.saveInsight, {
-        content,
-        structured,
-        promptKind: args.promptKind ?? "spending_analysis",
-        model: selectedModel,
-      });
+      let raw = content.trim();
+      const fenceStart = raw.indexOf("
+");
+      if (fenceStart > 0) {
+        raw = raw.slice(fenceStart + 1);
+      }
+      const fenceEnd = raw.lastIndexOf("
+");
+      if (fenceEnd > 0) {
+        raw = raw.slice(0, fenceEnd);
+      }
+      structured = raw;
+      const parsed = JSON.parse(structured);
+      return parsed;
     } catch (e) {
-      // Do not block action on save failure; surface minimal info
-      console.warn("Failed to save AI insight:", e);
+      throw new Error("Failed to parse LLM response as JSON");
     }
-
-    // Return parsed JSON if possible; otherwise return an object with raw content
-    if (structured) {
-      return JSON.parse(structured);
-    }
-    return { analysis: content, recommendations: "", confidence: "N/A" };
   },
 });
