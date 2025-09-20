@@ -19,6 +19,7 @@ import type * as balances from "../balances.js";
 import type * as expenses from "../expenses.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
+import type * as onboarding from "../onboarding.js";
 import type * as testData from "../testData.js";
 import type * as users from "../users.js";
 
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   expenses: typeof expenses;
   groups: typeof groups;
   http: typeof http;
+  onboarding: typeof onboarding;
   testData: typeof testData;
   users: typeof users;
 }>;

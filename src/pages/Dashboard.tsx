@@ -6,9 +6,10 @@ import { useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { Plus, Users, Receipt, TrendingUp, ArrowRight, Bell, Settings, CheckCircle, Clock } from "lucide-react";
 import { useNavigate } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateGroupDialog from "@/components/CreateGroupDialog";
 import JoinGroupDialog from "@/components/JoinGroupDialog";
+import OnboardingFlow from "@/components/OnboardingFlow";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function Dashboard() {
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showJoinGroup, setShowJoinGroup] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Shape of group item returned by backend (non-null)
   type GroupListItem = {
@@ -31,6 +33,16 @@ export default function Dashboard() {
   };
 
   const groupsRaw = useQuery(api.groups.getUserGroups);
+  const onboardingProfile = useQuery(api.onboarding.getProfile);
+
+  // Auto-open onboarding if not completed (once data is loaded)
+  useEffect(() => {
+    if (onboardingProfile === undefined) return;
+    if (!onboardingProfile || !onboardingProfile.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [onboardingProfile]);
+
   // Ensure non-null list of groups with correct typings
   const validGroups: GroupListItem[] = (groupsRaw ?? []).filter(
     (g): g is GroupListItem => Boolean(g)
@@ -123,6 +135,10 @@ export default function Dashboard() {
                 className="w-full h-full object-cover"
               />
             </div>
+            <Button variant="outline" className="border-[#E8E8E8] bg-white/60" onClick={() => setShowOnboarding(true)}>
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Personalize
+            </Button>
           </div>
         </div>
       </div>
@@ -573,6 +589,11 @@ export default function Dashboard() {
       {/* Dialogs */}
       <CreateGroupDialog open={showCreateGroup} onOpenChange={setShowCreateGroup} />
       <JoinGroupDialog open={showJoinGroup} onOpenChange={setShowJoinGroup} />
+      <OnboardingFlow
+        open={showOnboarding}
+        onOpenChange={setShowOnboarding}
+        initialProfile={onboardingProfile ?? null}
+      />
     </motion.div>
   );
 }
