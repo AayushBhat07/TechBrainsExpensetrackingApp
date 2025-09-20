@@ -18,6 +18,7 @@ import type * as aiData from "../aiData.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as auth from "../auth.js";
 import type * as balances from "../balances.js";
+import type * as crons from "../crons.js";
 import type * as expenses from "../expenses.js";
 import type * as groups from "../groups.js";
 import type * as http from "../http.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   "auth/emailOtp": typeof auth_emailOtp;
   auth: typeof auth;
   balances: typeof balances;
+  crons: typeof crons;
   expenses: typeof expenses;
   groups: typeof groups;
   http: typeof http;
