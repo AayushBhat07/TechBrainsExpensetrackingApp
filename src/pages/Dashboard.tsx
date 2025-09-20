@@ -312,6 +312,62 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* AI Insights (moved here under Profile Card) */}
+          <Card className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-semibold" style={{ color: "#2C3E50" }}>
+                  AI Insights
+                </CardTitle>
+                <span className="text-xs" style={{ color: "#7F8C8D" }}>
+                  Beta
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!latestInsight && (
+                <div
+                  className="rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs text-center"
+                  style={{ color: "#7F8C8D" }}
+                >
+                  {requestedInsight ? "Generating your first insight..." : "Preparing insights..."}
+                </div>
+              )}
+              <div
+                className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm"
+                style={{ color: "#2C3E50" }}
+              >
+                {latestInsight ? (
+                  <>
+                    <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
+                      Latest insight
+                    </div>
+                    <div className="max-h-40 overflow-auto whitespace-pre-wrap">
+                      {(() => {
+                        if (latestInsight.structured) {
+                          try {
+                            const parsed = JSON.parse(latestInsight.structured);
+                            const score = parsed?.spending_analysis?.overall_health_score;
+                            const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
+                            return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
+                          } catch {
+                            // fall back to raw content
+                          }
+                        }
+                        const raw: string = latestInsight.content || "";
+                        return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
+                      })()}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs" style={{ color: "#7F8C8D" }}>
+                    No insights yet. We'll generate them automatically shortly.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Recent Transactions (accordion-like simple list) */}
           <div className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-5">
             <div className="flex items-center justify-between mb-3">
@@ -459,65 +515,6 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* AI Insights */}
-        <div className="lg:col-span-3">
-          <Card className="rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-semibold" style={{ color: "#2C3E50" }}>
-                  AI Insights
-                </CardTitle>
-                <span className="text-xs" style={{ color: "#7F8C8D" }}>
-                  Beta
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Remove manual trigger button; show subtle status instead */}
-              {!latestInsight && (
-                <div
-                  className="rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs text-center"
-                  style={{ color: "#7F8C8D" }}
-                >
-                  {requestedInsight ? "Generating your first insight..." : "Preparing insights..."}
-                </div>
-              )}
-              <div
-                className="rounded-xl border border-[#E8E8E8] bg-white/70 p-3 text-sm"
-                style={{ color: "#2C3E50" }}
-              >
-                {latestInsight ? (
-                  <>
-                    <div className="text-xs mb-1" style={{ color: "#7F8C8D" }}>
-                      Latest insight
-                    </div>
-                    <div className="max-h-40 overflow-auto whitespace-pre-wrap">
-                      {(() => {
-                        if (latestInsight.structured) {
-                          try {
-                            const parsed = JSON.parse(latestInsight.structured);
-                            const score = parsed?.spending_analysis?.overall_health_score;
-                            const alerts = parsed?.spending_analysis?.overspending_alerts ?? [];
-                            return `Health: ${score ?? "n/a"} • Alerts: ${alerts.length}`;
-                          } catch {
-                            // fall back to raw content
-                          }
-                        }
-                        const raw: string = latestInsight.content || "";
-                        return raw.length > 300 ? raw.slice(0, 300) + "..." : raw;
-                      })()}
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-xs" style={{ color: "#7F8C8D" }}>
-                    No insights yet. We'll generate them automatically shortly.
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Calendar-ish timeline + Activity feed */}
