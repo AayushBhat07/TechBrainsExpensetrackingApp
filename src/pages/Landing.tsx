@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { HeroSection } from "@/components/HeroSection";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 import { 
@@ -40,7 +41,7 @@ export default function Landing() {
       <motion.nav
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-gray-100"
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100"
       >
         <div className="max-w-6xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
@@ -62,41 +63,15 @@ export default function Landing() {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="py-24">
-        <div className="max-w-6xl mx-auto px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
-              Split expenses.<br />
-              <span className="text-gray-600">Stay friends.</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-              The simplest way to track shared expenses with roommates, family, and friends. 
-              Real-time balances, receipt uploads, and automatic settlement calculations.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button
-                onClick={handleGetStarted}
-                size="lg"
-                className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 text-lg"
-              >
-                {isAuthenticated ? "Go to Dashboard" : "Start Tracking"}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSection onGetStarted={handleGetStarted} isAuthenticated={isAuthenticated} />
 
       {/* Features Grid */}
       <section className="py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.2 }}
             className="text-center mb-16"
           >
@@ -113,7 +88,7 @@ export default function Landing() {
               {
                 icon: Users,
                 title: "Group Management",
-                description: "Create groups for roommates, family, or friends. Invite members with simple codes.",
+                description: "Create and manage groups for roommates, family, or friends. Invite members with simple codes.",
               },
               {
                 icon: Receipt,
@@ -144,9 +119,10 @@ export default function Landing() {
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ delay: 0.3 + index * 0.1 }}
-                className="bg-white p-8 rounded-lg border border-gray-200"
+                className="bg-white p-8 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-6">
                   <feature.icon className="w-6 h-6 text-gray-700" />
@@ -168,7 +144,8 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.4 }}
             className="text-center mb-16"
           >
@@ -201,7 +178,8 @@ export default function Landing() {
               <motion.div
                 key={step.step}
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ delay: 0.5 + index * 0.1 }}
                 className="text-center"
               >
@@ -226,7 +204,8 @@ export default function Landing() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ delay: 0.6 }}
             >
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
@@ -246,7 +225,8 @@ export default function Landing() {
                   <motion.div
                     key={benefit}
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
                     transition={{ delay: 0.7 + index * 0.1 }}
                     className="flex items-center"
                   >
@@ -259,9 +239,10 @@ export default function Landing() {
 
             <motion.div
               initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ delay: 0.8 }}
-              className="bg-white p-8 rounded-lg border border-gray-200"
+              className="bg-white p-8 rounded-lg border border-gray-200 shadow-lg"
             >
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -297,7 +278,8 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ delay: 0.9 }}
           >
             <h2 className="text-3xl font-bold text-gray-900 mb-6">

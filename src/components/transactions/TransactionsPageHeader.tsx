@@ -264,7 +264,10 @@ export const TransactionsPageHeader: React.FC = () => {
               <Target className="w-4 h-4 mr-2" />
               Set Budget Goal
             </button>
-            <button className="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/20 hover:bg-emerald-500/30 transition">
+            <button
+              className="inline-flex items-center px-3 py-2 rounded-lg border border-emerald-500/40 bg-emerald-500/20 hover:bg-emerald-500/30 transition"
+              onClick={() => window.dispatchEvent(new Event("open-recurring-modal"))}
+            >
               <Repeat className="w-4 h-4 mr-2" />
               Manage Recurring
             </button>

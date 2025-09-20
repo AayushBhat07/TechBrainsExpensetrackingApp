@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Repeat, Calendar, AlertCircle, Clock, Edit3, Trash2, Plus, Pause, Play } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -133,6 +133,12 @@ export const RecurringPaymentsSection: React.FC = () => {
   const [merchant, setMerchant] = useState<string>("");
   const [accountLinked, setAccountLinked] = useState<string>("");
   const [autoPay, setAutoPay] = useState<boolean>(true);
+
+  useEffect(() => {
+    const handler = (_e: Event) => setOpen(true);
+    window.addEventListener("open-recurring-modal", handler as EventListener);
+    return () => window.removeEventListener("open-recurring-modal", handler as EventListener);
+  }, []);
 
   const submitAdd = async () => {
     try {
