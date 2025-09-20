@@ -193,17 +193,17 @@ export default function DailyReport() {
                     <div className="text-right font-semibold" style={{ color: "#2C3E50" }}>
                       ${t.amount.toFixed(2)}
                     </div>
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2 flex-wrap">
                       <Button
                         variant="outline"
-                        className="h-7 px-2 border-[#E8E8E8] bg-white/60 text-xs"
+                        className="h-7 px-2 border-[#E8E8E8] bg-white/60 text-xs shrink-0"
                         onClick={() => console.log("Edit", t.id)}
                       >
                         Edit
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-7 px-2 border-red-300 text-red-600 bg-red-50/60 text-xs"
+                        className="h-7 px-2 border-red-300 text-red-600 bg-red-50/60 text-xs shrink-0"
                         onClick={() => console.log("Delete", t.id)}
                       >
                         Delete
