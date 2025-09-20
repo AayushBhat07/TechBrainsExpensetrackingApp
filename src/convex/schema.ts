@@ -182,6 +182,29 @@ const schema = defineSchema(
       promptKind: v.optional(v.string()),
       model: v.optional(v.string()),
     }).index("by_user", ["userId"]),
+
+    // Add: Recurring payments (user-scoped)
+    recurringPayments: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+      category: v.string(),
+      amount: v.number(),
+      frequency: v.union(
+        v.literal("weekly"),
+        v.literal("biweekly"),
+        v.literal("monthly"),
+        v.literal("quarterly"),
+        v.literal("annually"),
+      ),
+      nextDue: v.number(), // timestamp (ms)
+      lastPaid: v.optional(v.number()),
+      status: v.union(v.literal("active"), v.literal("paused"), v.literal("cancelled")),
+      autoPayEnabled: v.boolean(),
+      merchant: v.optional(v.string()),
+      accountLinked: v.optional(v.string()),
+      totalPaidThisYear: v.optional(v.number()),
+    }).index("by_user", ["userId"])
+      .index("by_user_and_next_due", ["userId", "nextDue"]),
   },
   {
     schemaValidation: false,

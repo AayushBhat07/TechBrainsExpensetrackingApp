@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { Repeat, Calendar, AlertCircle, Clock, Edit3, Trash2, Plus, Pause, Play } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 interface RecurringPayment {
   id: string;
@@ -82,7 +88,77 @@ export const RecurringPaymentsSection: React.FC = () => {
     },
   ]);
 
-  const totalMonthlyRecurring = recurringPayments
+  // Backend data
+  const serverRecurring = useQuery(api.recurring.list) as any[] | undefined;
+  const addRecurring = useMutation(api.recurring.add);
+  const toggleRecurring = useMutation(api.recurring.toggleStatus);
+  const removeRecurring = useMutation(api.recurring.remove);
+
+  // Merge: keep mock + server (server items appended, avoid duplicates by name+amount)
+  const mergedPayments = (() => {
+    const base = [...recurringPayments];
+    for (const r of serverRecurring ?? []) {
+      const exists = base.find(
+        (p) => p.name === r.name && Math.abs(p.amount - r.amount) < 0.001,
+      );
+      const daysUntil = Math.max(0, Math.ceil((r.nextDue - Date.now()) / (1000 * 60 * 60 * 24)));
+      if (!exists) {
+        base.push({
+          id: String(r._id),
+          name: r.name,
+          category: r.category,
+          amount: r.amount,
+          frequency: r.frequency,
+          nextDue: new Date(r.nextDue).toISOString().slice(0, 10),
+          lastPaid: r.lastPaid ? new Date(r.lastPaid).toISOString().slice(0, 10) : "",
+          status: r.status,
+          autoPayEnabled: !!r.autoPayEnabled,
+          merchant: r.merchant ?? "",
+          accountLinked: r.accountLinked ?? "",
+          totalPaidThisYear: r.totalPaidThisYear ?? 0,
+          daysUntilDue: daysUntil,
+        });
+      }
+    }
+    return base;
+  })();
+
+  // Add dialog state
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState<number>(0);
+  const [frequency, setFrequency] = useState<"weekly" | "biweekly" | "monthly" | "quarterly" | "annually">("monthly");
+  const [nextDue, setNextDue] = useState<string>("");
+  const [category, setCategory] = useState<string>("Subscriptions");
+  const [merchant, setMerchant] = useState<string>("");
+  const [accountLinked, setAccountLinked] = useState<string>("");
+  const [autoPay, setAutoPay] = useState<boolean>(true);
+
+  const submitAdd = async () => {
+    try {
+      if (!name || !amount || !nextDue) {
+        toast("Fill name, amount, and next due date.");
+        return;
+      }
+      await addRecurring({
+        name,
+        category,
+        amount: Number(amount),
+        frequency,
+        nextDue: new Date(nextDue).getTime(),
+        autoPayEnabled: autoPay,
+        merchant: merchant || undefined,
+        accountLinked: accountLinked || undefined,
+      });
+      toast("Recurring payment added.");
+      setOpen(false);
+      setName(""); setAmount(0); setNextDue(""); setMerchant(""); setAccountLinked("");
+    } catch (e: any) {
+      toast(e.message || "Failed to add recurring payment");
+    }
+  };
+
+  const totalMonthlyRecurring = mergedPayments
     .filter((p) => p.status === "active")
     .reduce((sum, p) => {
       const multiplier =
@@ -96,7 +172,7 @@ export const RecurringPaymentsSection: React.FC = () => {
       return sum + p.amount * multiplier;
     }, 0);
 
-  const upcomingPayments = recurringPayments
+  const upcomingPayments = mergedPayments
     .filter((p) => p.daysUntilDue <= 7 && p.status === "active")
     .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
 
@@ -138,7 +214,7 @@ export const RecurringPaymentsSection: React.FC = () => {
             </div>
             <div className="text-center p-3 bg-white/40 rounded-lg">
               <div className="text-xl text-emerald-600 font-semibold">
-                {recurringPayments.filter((p) => p.status === "active").length}
+                {mergedPayments.filter((p) => p.status === "active").length}
               </div>
               <div className="text-xs text-muted-foreground">Active</div>
             </div>
@@ -148,7 +224,7 @@ export const RecurringPaymentsSection: React.FC = () => {
             </div>
             <div className="text-center p-3 bg-white/40 rounded-lg">
               <div className="text-xl text-purple-600 font-semibold">
-                {recurringPayments.filter((p) => p.autoPayEnabled).length}
+                {mergedPayments.filter((p) => p.autoPayEnabled).length}
               </div>
               <div className="text-xs text-muted-foreground">Auto-Pay</div>
             </div>
@@ -156,7 +232,7 @@ export const RecurringPaymentsSection: React.FC = () => {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button className="inline-flex items-center px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 hover:bg-blue-500/30 transition">
+          <button className="inline-flex items-center px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 hover:bg-blue-500/30 transition" onClick={() => setOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Recurring Payment
           </button>
@@ -190,7 +266,7 @@ export const RecurringPaymentsSection: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        {recurringPayments.map((payment) => {
+        {mergedPayments.map((payment) => {
           const dueDateStatus = getDueDateStatus(payment.daysUntilDue);
           const DueDateIcon = dueDateStatus.icon as any;
 
@@ -242,8 +318,16 @@ export const RecurringPaymentsSection: React.FC = () => {
 
                 <div className="flex items-center space-x-2 ml-4">
                   <button
-                    onClick={() => {
-                      const updated = recurringPayments.map((p) =>
+                    onClick={async () => {
+                      if (serverRecurring?.some((r) => String(r._id) === payment.id)) {
+                        try {
+                          await toggleRecurring({ id: payment.id as any });
+                        } catch (e: any) {
+                          toast(e.message || "Failed to update");
+                        }
+                        return;
+                      }
+                      const updated = mergedPayments.map((p) =>
                         p.id === payment.id ? { ...p, status: p.status === "active" ? ("paused" as const) : ("active" as const) } : p,
                       );
                       setRecurringPayments(updated);
@@ -257,7 +341,21 @@ export const RecurringPaymentsSection: React.FC = () => {
                   <button className="px-3 py-2 rounded-lg border bg-black/10">
                     <Edit3 className="w-4 h-4" />
                   </button>
-                  <button className="px-3 py-2 rounded-lg border text-red-500 border-red-500/40">
+                  <button
+                    className="px-3 py-2 rounded-lg border text-red-500 border-red-500/40"
+                    onClick={async () => {
+                      if (serverRecurring?.some((r) => String(r._id) === payment.id)) {
+                        try {
+                          await removeRecurring({ id: payment.id as any });
+                          toast("Removed");
+                        } catch (e: any) {
+                          toast(e.message || "Failed to remove");
+                        }
+                        return;
+                      }
+                      setRecurringPayments((prev) => prev.filter((p) => p.id !== payment.id));
+                    }}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -283,6 +381,70 @@ export const RecurringPaymentsSection: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Add Recurring Dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-white/80 backdrop-blur-[9px]">
+          <DialogHeader>
+            <DialogTitle>Add Recurring Payment</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Name</div>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Netflix Subscription" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Amount</div>
+                <Input type="number" value={amount} onChange={(e) => setAmount(parseFloat(e.target.value))} />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Next Due</div>
+                <Input type="date" value={nextDue} onChange={(e) => setNextDue(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Frequency</div>
+              <Select value={frequency} onValueChange={(v) => setFrequency(v as any)}>
+                <SelectTrigger className="bg-white/70">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["weekly","biweekly","monthly","quarterly","annually"].map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Category</div>
+                <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Subscriptions" />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Merchant</div>
+                <Input value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder="Netflix" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground mb-1">Account</div>
+                <Input value={accountLinked} onChange={(e) => setAccountLinked(e.target.value)} placeholder="Main Checking" />
+              </div>
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={autoPay} onChange={(e) => setAutoPay(e.target.checked)} />
+                  Auto-Pay Enabled
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <button className="px-3 py-2 rounded-lg border bg-black/10" onClick={() => setOpen(false)}>Cancel</button>
+            <button className="px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20" onClick={submitAdd}>Save</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

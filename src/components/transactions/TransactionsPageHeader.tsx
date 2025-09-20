@@ -3,6 +3,12 @@ import { Target, TrendingUp, Repeat, PieChart, Settings, Plus, AlertCircle } fro
 import { GlassCard } from "@/components/ui/GlassCard";
 import { CircularProgressBar } from "@/components/ui/CircularProgressBar";
 import { LinearProgressBar } from "@/components/ui/LinearProgressBar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 interface BudgetData {
   monthlyGoal: number;
@@ -28,6 +34,80 @@ export const TransactionsPageHeader: React.FC = () => {
   const progressPercentage = (budgetData.spent / budgetData.monthlyGoal) * 100;
   const isOverBudget = progressPercentage > 100;
   const isWarning = progressPercentage > 80;
+
+  // Add state: dialogs for add transaction and set budget
+  const [txOpen, setTxOpen] = useState(false);
+  const [budgetOpen, setBudgetOpen] = useState(false);
+
+  // Basic form state
+  const [txGroupId, setTxGroupId] = useState<string>("");
+  const [txTitle, setTxTitle] = useState("");
+  const [txAmount, setTxAmount] = useState<number>(0);
+  const [txCategory, setTxCategory] = useState("other");
+
+  const [bgGroupId, setBgGroupId] = useState<string>("");
+  const [bgCategory, setBgCategory] = useState("other");
+  const [bgMonth, setBgMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [bgLimit, setBgLimit] = useState<number>(1000);
+
+  // Data: groups list
+  const groups = useQuery(api.groups.getUserGroups) as any[] | undefined;
+
+  // Mutations
+  const createExpense = useMutation(api.expenses.create);
+  const upsertBudget = useMutation(api.budgets.upsert as any);
+
+  const submitTx = async () => {
+    try {
+      if (!txGroupId || !txTitle || !txAmount) {
+        toast("Fill all fields for the new transaction.");
+        return;
+      }
+      // Fetch members for equal split
+      const details = await (window as any).convexClient?.query?.(api.groups.getGroupDetails, { groupId: txGroupId });
+      // Fallback: use runTime fetch via useQuery is not available here; do a simple equal split assumption:
+      const members: any[] = details?.members ?? [];
+      if (!members.length) {
+        toast("Selected group has no members.");
+        return;
+      }
+      const per = +(txAmount / members.length).toFixed(2);
+      await createExpense({
+        groupId: txGroupId as any,
+        title: txTitle,
+        amount: Number(txAmount),
+        category: txCategory as any,
+        splitAmounts: members.map((m) => ({ userId: m._id, amount: per })),
+      });
+      toast("Transaction added.");
+      setTxOpen(false);
+      setTxTitle("");
+      setTxAmount(0);
+      setTxCategory("other");
+      setTxGroupId("");
+    } catch (e: any) {
+      toast(e.message || "Failed to add transaction");
+    }
+  };
+
+  const submitBudget = async () => {
+    try {
+      if (!bgGroupId || !bgMonth || !bgCategory || !bgLimit) {
+        toast("Fill all fields for the budget.");
+        return;
+      }
+      await upsertBudget({
+        groupId: bgGroupId as any,
+        category: bgCategory,
+        month: bgMonth,
+        monthlyLimit: Number(bgLimit),
+      });
+      toast("Budget goal saved.");
+      setBudgetOpen(false);
+    } catch (e: any) {
+      toast(e.message || "Failed to save budget");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -161,11 +241,11 @@ export const TransactionsPageHeader: React.FC = () => {
       <GlassCard size="responsive">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap gap-3">
-            <button className="inline-flex items-center px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 hover:bg-blue-500/30 transition">
+            <button className="inline-flex items-center px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 hover:bg-blue-500/30 transition" onClick={() => setTxOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Transaction
             </button>
-            <button className="inline-flex items-center px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 hover:bg-purple-500/30 transition">
+            <button className="inline-flex items-center px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 hover:bg-purple-500/30 transition" onClick={() => setBudgetOpen(true)}>
               <Target className="w-4 h-4 mr-2" />
               Set Budget Goal
             </button>
@@ -187,6 +267,108 @@ export const TransactionsPageHeader: React.FC = () => {
           </div>
         </div>
       </GlassCard>
+
+      {/* Add Transaction Dialog */}
+      <Dialog open={txOpen} onOpenChange={setTxOpen}>
+        <DialogContent className="bg-white/80 backdrop-blur-[9px]">
+          <DialogHeader>
+            <DialogTitle>Add Transaction</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Group</div>
+              <Select value={txGroupId} onValueChange={setTxGroupId}>
+                <SelectTrigger className="bg-white/70">
+                  <SelectValue placeholder="Select a group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(groups ?? []).map((g: any) => (
+                    <SelectItem key={g._id} value={g._id}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Title</div>
+              <Input value={txTitle} onChange={(e) => setTxTitle(e.target.value)} placeholder="e.g., Lunch" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Amount</div>
+              <Input type="number" value={txAmount} onChange={(e) => setTxAmount(parseFloat(e.target.value))} />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Category</div>
+              <Select value={txCategory} onValueChange={setTxCategory}>
+                <SelectTrigger className="bg-white/70">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["groceries","utilities","rent","dining","transportation","entertainment","household","healthcare","other"].map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <button className="px-3 py-2 rounded-lg border bg-black/10" onClick={() => setTxOpen(false)}>Cancel</button>
+            <button className="px-3 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20" onClick={submitTx}>Save</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set Budget Dialog */}
+      <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
+        <DialogContent className="bg-white/80 backdrop-blur-[9px]">
+          <DialogHeader>
+            <DialogTitle>Set Budget Goal</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Group</div>
+              <Select value={bgGroupId} onValueChange={setBgGroupId}>
+                <SelectTrigger className="bg-white/70">
+                  <SelectValue placeholder="Select a group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(groups ?? []).map((g: any) => (
+                    <SelectItem key={g._id} value={g._id}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Category</div>
+              <Select value={bgCategory} onValueChange={setBgCategory}>
+                <SelectTrigger className="bg-white/70">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["groceries","utilities","rent","dining","transportation","entertainment","household","healthcare","other"].map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Month (YYYY-MM)</div>
+              <Input value={bgMonth} onChange={(e) => setBgMonth(e.target.value)} placeholder="2025-10" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Monthly Limit</div>
+              <Input type="number" value={bgLimit} onChange={(e) => setBgLimit(parseFloat(e.target.value))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <button className="px-3 py-2 rounded-lg border bg-black/10" onClick={() => setBudgetOpen(false)}>Cancel</button>
+            <button className="px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20" onClick={submitBudget}>Save</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
