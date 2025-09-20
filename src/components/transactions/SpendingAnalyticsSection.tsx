@@ -107,13 +107,11 @@ export const SpendingAnalyticsSection: React.FC = () => {
                       size={280}
                       innerRadius={90}
                     />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-3xl font-semibold">
-                          ${categoryData.reduce((s, c) => s + c.amount, 0).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-muted-foreground">Total Spent</div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                      <div className="text-3xl font-semibold">
+                        ${categoryData.reduce((s, c) => s + c.amount, 0).toLocaleString()}
                       </div>
+                      <div className="text-sm text-muted-foreground">Total Spent</div>
                     </div>
                   </div>
 
