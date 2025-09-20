@@ -6,7 +6,7 @@ import { LinearProgressBar } from "@/components/ui/LinearProgressBar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 
@@ -46,6 +46,7 @@ export const TransactionsPageHeader: React.FC = () => {
   const [txCategory, setTxCategory] = useState("other");
   // Add: allow choosing to save to a group or not
   const [saveToGroup, setSaveToGroup] = useState<boolean>(true);
+  const [txFile, setTxFile] = useState<File | null>(null); // Add: receipt file state
 
   const [bgGroupId, setBgGroupId] = useState<string>("");
   const [bgCategory, setBgCategory] = useState("other");
@@ -58,6 +59,7 @@ export const TransactionsPageHeader: React.FC = () => {
   // Mutations
   const createExpense = useMutation(api.expenses.create);
   const upsertBudget = useMutation(api.budgets.upsert as any);
+  const getUploadUrl = useAction(api.storage.getUploadUrl); // Add: action to get upload URL
 
   const submitTx = async () => {
     try {
@@ -75,7 +77,33 @@ export const TransactionsPageHeader: React.FC = () => {
         setTxAmount(0);
         setTxCategory("other");
         setTxGroupId("");
+        setTxFile(null); // reset file
         return;
+      }
+
+      // Optional: upload receipt if provided
+      let receiptUrlId: string | undefined = undefined;
+      if (txFile) {
+        const uploadUrl = await getUploadUrl({});
+        if (!uploadUrl) {
+          toast("Failed to get upload URL.");
+          return;
+        }
+        const res = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": txFile.type || "application/octet-stream" },
+          body: txFile,
+        });
+        if (!res.ok) {
+          toast("Failed to upload receipt.");
+          return;
+        }
+        const json = (await res.json()) as { storageId?: string };
+        if (!json?.storageId) {
+          toast("Upload did not return a file id.");
+          return;
+        }
+        receiptUrlId = json.storageId;
       }
 
       // Fetch members for equal split
@@ -93,6 +121,7 @@ export const TransactionsPageHeader: React.FC = () => {
         amount: Number(txAmount),
         category: txCategory as any,
         splitAmounts: members.map((m) => ({ userId: m._id, amount: per })),
+        ...(receiptUrlId ? { receiptUrl: receiptUrlId as any } : {}),
       });
       toast("Transaction added.");
       setTxOpen(false);
@@ -100,6 +129,7 @@ export const TransactionsPageHeader: React.FC = () => {
       setTxAmount(0);
       setTxCategory("other");
       setTxGroupId("");
+      setTxFile(null); // reset file
     } catch (e: any) {
       toast(e.message || "Failed to add transaction");
     }
@@ -343,6 +373,20 @@ export const TransactionsPageHeader: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Receipt Photo (camera/upload) */}
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Receipt photo (optional)</div>
+              <Input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setTxFile(e.target.files?.[0] ?? null)}
+              />
+              <div className="text-[11px] text-muted-foreground mt-1">
+                You can take a photo or upload an image of the receipt.
+              </div>
             </div>
           </div>
           <DialogFooter>

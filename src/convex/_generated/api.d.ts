@@ -25,6 +25,7 @@ import type * as groups from "../groups.js";
 import type * as http from "../http.js";
 import type * as onboarding from "../onboarding.js";
 import type * as recurring from "../recurring.js";
+import type * as storage from "../storage.js";
 import type * as testData from "../testData.js";
 import type * as users from "../users.js";
 
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   onboarding: typeof onboarding;
   recurring: typeof recurring;
+  storage: typeof storage;
   testData: typeof testData;
   users: typeof users;
 }>;
