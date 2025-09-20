@@ -80,7 +80,7 @@ export default function FinancialGlassCalendar({
   };
 
   return (
-    <div className={`rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-6 ${className}`}>
+    <div className={`rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-[9px] p-6 ${className}`}>
       <div className="flex items-center justify-between">
         <h3 className="font-semibold" style={{ color: "#2C3E50" }}>
           {title}

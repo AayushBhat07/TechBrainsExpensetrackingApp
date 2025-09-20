@@ -142,7 +142,7 @@ export default function Dashboard() {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="border-[#E8E8E8] bg-white/60 backdrop-blur-md">
+            <Button variant="outline" className="border-[#E8E8E8] bg-white/60 backdrop-blur-[9px]">
               <Users className="w-4 h-4 mr-2" />
               Join
             </Button>
@@ -181,7 +181,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-8 rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-6"
+          className="lg:col-span-8 rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-[9px] p-6"
         >
           <div className="flex items-center justify-between">
             <div>
