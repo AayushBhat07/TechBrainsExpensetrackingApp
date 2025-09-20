@@ -170,6 +170,18 @@ const schema = defineSchema(
       onboardingCompleted: v.optional(v.boolean()),
       completedAt: v.optional(v.number()),
     }).index("by_user", ["userId"]),
+
+    // Add: AI-generated insights per user
+    userInsights: defineTable({
+      userId: v.id("users"),
+      // raw text returned by the LLM (stringified JSON or narrative text)
+      content: v.string(),
+      // optional structured JSON string (clients can parse)
+      structured: v.optional(v.string()),
+      // prompt metadata (for auditability)
+      promptKind: v.optional(v.string()),
+      model: v.optional(v.string()),
+    }).index("by_user", ["userId"]),
   },
   {
     schemaValidation: false,

@@ -1,0 +1,21 @@
+      "",
+      "Return ONLY JSON (no extra commentary) with a single root key 'spending_analysis' containing:",
+      "- overall_health_score (1-10)",
+      "- overspending_alerts: array of objects with keys:",
+      "  category (string), severity (\"low\"|\"moderate\"|\"high\"), actual_amount (number), recommended_amount (number), percentage_over (number), impact_on_goal (string), personalized_message (string)",
+      "- positive_patterns: array of { category: string, message: string }",
+      "- recommendations: array of 3-5 short actionable strings",
+    ].join("\n");
+
+    const content = await callLLM({
+      apiKey,
+      model: selectedModel,
+      systemPrompt,
+      userPrompt,
+    });
+
+    // Try to extract and parse JSON (handle possible code fences)
+    let structured: string | undefined;
+    try {
+      let raw = content.trim();
+      const fenceStart = raw.indexOf("
