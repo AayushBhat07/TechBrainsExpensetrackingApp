@@ -11,6 +11,7 @@ import CreateGroupDialog from "@/components/CreateGroupDialog";
 import JoinGroupDialog from "@/components/JoinGroupDialog";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import FinancialGlassCalendar from "@/components/ui/financial-glass-calendar";
+import Hyperspeed from "@/components/Hyperspeed";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function Dashboard() {
@@ -104,11 +105,17 @@ export default function Dashboard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       // Glass morphism + warm palette background
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={{
-        background: "linear-gradient(135deg, #F5F3F0 0%, #FFF7E0 100%)",
+        // Remove heavy gradient; background handled by Hyperspeed + subtle overlay
+        background: "transparent",
       }}
     >
+      {/* Hyperspeed animated background */}
+      <Hyperspeed className="opacity-60" />
+      {/* Soft overlay for readability */}
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: "radial-gradient(ellipse at center, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 100%)" }} />
+
       {/* Header / Nav */}
       <div className="sticky top-0 z-10 backdrop-blur-xl bg-white/30 border-b border-[#E8E8E8]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
