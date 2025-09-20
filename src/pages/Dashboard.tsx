@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import CreateGroupDialog from "@/components/CreateGroupDialog";
 import JoinGroupDialog from "@/components/JoinGroupDialog";
 import OnboardingFlow from "@/components/OnboardingFlow";
+import FinancialGlassCalendar from "@/components/ui/financial-glass-calendar";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export default function Dashboard() {
@@ -516,37 +517,8 @@ export default function Dashboard() {
         </div>
 
         {/* Calendar-ish timeline + Activity feed */}
-        <div className="lg:col-span-7 rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold" style={{ color: "#2C3E50" }}>
-              September 2024
-            </h3>
-            <div className="text-xs" style={{ color: "#7F8C8D" }}>
-              Upcoming bills and due dates
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-7 gap-3">
-            {Array.from({ length: 14 }).map((_, i) => {
-              const highlight = [2, 5, 7, 10].includes(i);
-              return (
-                <div
-                  key={i}
-                  className={`h-16 rounded-xl border border-[#E8E8E8] bg-white/70 p-2 text-xs ${
-                    highlight ? "ring-2 ring-[#F4D03F]" : ""
-                  }`}
-                >
-                  <div className="font-semibold" style={{ color: "#2C3E50" }}>
-                    {i + 1}
-                  </div>
-                  {highlight && (
-                    <div className="mt-1 text-[11px]" style={{ color: "#7F8C8D" }}>
-                      Bill due
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+        <div className="lg:col-span-7">
+          <FinancialGlassCalendar />
         </div>
 
         <div className="lg:col-span-5 rounded-2xl border border-[#E8E8E8] bg-white/60 backdrop-blur-xl p-6">
