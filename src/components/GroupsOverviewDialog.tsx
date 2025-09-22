@@ -100,7 +100,7 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
           {/* Visuals row */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             {/* Donut */}
-            <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
+            <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-5 overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <div className="font-semibold text-[#2C3E50]">Spending Split</div>
                 <BarChart3 className="w-4 h-4 text-[#2C3E50]" />
@@ -130,8 +130,8 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
                 });
 
                 return (
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <div className="relative w-full max-w-[320px] aspect-square">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-stretch gap-6">
+                    <div className="relative w-full max-w-[320px] aspect-square shrink-0">
                       <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" className="block">
                         <circle cx={center} cy={center} r={radius} fill="none" stroke="#F5F3F0" strokeWidth={stroke} />
                         <g transform={`rotate(-90 ${center} ${center})`}>
@@ -161,7 +161,7 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
                     </div>
 
                     {/* Legend */}
-                    <div className="flex-1 space-y-3 min-w-[200px] w-full">
+                    <div className="flex-1 space-y-3 min-w-[220px] w-full shrink-0">
                       {totals.dist.map((d, i) => (
                         <div key={d.name} className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
@@ -178,28 +178,30 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
             </div>
 
             {/* Bars */}
-            <div className="md:col-span-3 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
+            <div className="md:col-span-3 rounded-xl border border-[#E8E8E8] bg-white/70 p-5 overflow-hidden">
               <div className="font-semibold text-[#2C3E50] mb-4">Monthly Spend by Group</div>
-              <div className="grid grid-cols-6 items-end gap-3 h-48">
-                {mockGroups.map((g, i) => {
-                  const pct = Math.max(8, Math.round((g.monthlySpend / top) * 100));
-                  return (
-                    <div key={g.id} className="flex flex-col items-center gap-2">
-                      <div className="w-full min-w-4 rounded-lg bg-[#F5F3F0] border border-[#E8E8E8] overflow-hidden" style={{ height: "100%" }}>
-                        <div
-                          className="w-full rounded-lg"
-                          style={{
-                            height: `${pct}%`,
-                            marginTop: `${100 - pct}%`,
-                            background: colors[i % colors.length],
-                          }}
-                          title={`${g.name}: $${format(g.monthlySpend)}`}
-                        />
+              <div className="overflow-x-auto">
+                <div className="grid grid-cols-6 items-end gap-3 h-48 min-w-[420px]">
+                  {mockGroups.map((g, i) => {
+                    const pct = Math.max(8, Math.round((g.monthlySpend / top) * 100));
+                    return (
+                      <div key={g.id} className="flex flex-col items-center gap-2">
+                        <div className="w-full min-w-4 rounded-lg bg-[#F5F3F0] border border-[#E8E8E8] overflow-hidden" style={{ height: "100%" }}>
+                          <div
+                            className="w-full rounded-lg"
+                            style={{
+                              height: `${pct}%`,
+                              marginTop: `${100 - pct}%`,
+                              background: colors[i % colors.length],
+                            }}
+                            title={`${g.name}: $${format(g.monthlySpend)}`}
+                          />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground text-center leading-tight">{g.name.split(" ")[0]}</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground text-center leading-tight">{g.name.split(" ")[0]}</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
