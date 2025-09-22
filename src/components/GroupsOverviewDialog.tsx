@@ -46,23 +46,6 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
   // Simple color palette
   const colors = ["#2C3E50", "#F4D03F", "#7F8C8D", "#16A085", "#8E44AD"];
 
-  // Donut via conic-gradient
-  const donutStyle: React.CSSProperties = (() => {
-    const total = totals.dist.reduce((a, d) => a + d.value, 0) || 1;
-    let current = 0;
-    const segments = totals.dist
-      .map((d, i) => {
-        const start = (current / total) * 360;
-        current += d.value;
-        const end = (current / total) * 360;
-        return `${colors[i % colors.length]} ${start}deg ${end}deg`;
-      })
-      .join(", ");
-    return {
-      background: `conic-gradient(${segments})`,
-    };
-  })();
-
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code).then(() => toast(`Invite code copied: ${code}`));
   };
@@ -104,36 +87,93 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {/* Donut */}
-          <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-            <div className="flex items-center justify-between mb-3">
+          <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
+            <div className="flex items-center justify-between mb-4">
               <div className="font-semibold text-[#2C3E50]">Spending Split</div>
               <BarChart3 className="w-4 h-4 text-[#2C3E50]" />
             </div>
-            <div className="flex items-center gap-4">
-              <div className="relative w-36 h-36 rounded-full" style={donutStyle}>
-                <div className="absolute inset-3 rounded-full bg-white/80 backdrop-blur" />
-                <div className="absolute inset-0 grid place-items-center text-center">
-                  <div className="text-xs text-muted-foreground">Total</div>
-                  <div className="text-lg font-semibold text-[#2C3E50]">
-                    ${format(totals.totalSpend)}
+
+            {/* SVG Donut */}
+            {(() => {
+              const total = totals.dist.reduce((a, d) => a + d.value, 0) || 1;
+              const size = 220; // larger so it's not compact
+              const radius = 90;
+              const stroke = 22;
+              const center = size / 2;
+              const circumference = 2 * Math.PI * radius;
+
+              let cumulative = 0;
+              const segments = totals.dist.map((d, i) => {
+                const frac = d.value / total;
+                const length = frac * circumference;
+                const offset = circumference - cumulative;
+                cumulative += length;
+                return {
+                  color: colors[i % colors.length],
+                  length,
+                  offset,
+                };
+              });
+
+              return (
+                <div className="flex items-center gap-5">
+                  <div className="relative" style={{ width: size, height: size }}>
+                    <svg width={size} height={size} className="block">
+                      {/* Background ring */}
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={radius}
+                        fill="none"
+                        stroke="#F5F3F0"
+                        strokeWidth={stroke}
+                      />
+                      {/* Segments */}
+                      <g transform={`rotate(-90 ${center} ${center})`}>
+                        {segments.map((s, i) => (
+                          <circle
+                            key={i}
+                            cx={center}
+                            cy={center}
+                            r={radius}
+                            fill="none"
+                            stroke={s.color}
+                            strokeWidth={stroke}
+                            strokeDasharray={`${s.length} ${circumference}`}
+                            strokeDashoffset={s.offset}
+                            strokeLinecap="butt"
+                          />
+                        ))}
+                      </g>
+                    </svg>
+
+                    {/* Center label */}
+                    <div className="absolute inset-0 grid place-items-center text-center">
+                      <div className="text-xs text-muted-foreground">Total</div>
+                      <div className="text-xl font-semibold text-[#2C3E50]">
+                        ${format(totals.totalSpend)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="flex-1 space-y-3 min-w-[180px]">
+                    {totals.dist.map((d, i) => (
+                      <div key={d.name} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-block w-3 h-3 rounded-sm"
+                            style={{ background: colors[i % colors.length] }}
+                          />
+                          <span className="text-sm text-[#2C3E50]">{d.name}</span>
+                        </div>
+                        <span className="text-sm text-[#2C3E50]">${format(d.value)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-              <div className="flex-1 space-y-2">
-                {totals.dist.map((d, i) => (
-                  <div key={d.name} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block w-3 h-3 rounded-sm"
-                        style={{ background: colors[i % colors.length] }}
-                      />
-                      <span className="text-sm text-[#2C3E50]">{d.name}</span>
-                    </div>
-                    <span className="text-sm text-[#2C3E50]">${format(d.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+              );
+            })()}
           </div>
 
           {/* Bars */}
