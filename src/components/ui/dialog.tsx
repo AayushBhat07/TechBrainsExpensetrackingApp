@@ -61,7 +61,7 @@ function DialogContent({
           // Glassmorphism container with consistent blur and borders
           "bg-white/70 backdrop-blur-[9px] border border-[#E8E8E8] rounded-2xl shadow-lg",
           // Centering and sizing
-          "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-[calc(100%-2rem)] sm:max-w-lg",
+          "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-[calc(100%-2rem)]",
           // Spacing and overflow containment
           "p-6 max-h-[85vh] overflow-auto",
           // Animations
