@@ -96,7 +96,8 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
             {/* SVG Donut */}
             {(() => {
               const total = totals.dist.reduce((a, d) => a + d.value, 0) || 1;
-              const size = 220; // larger so it's not compact
+              // Increase internal canvas size but render responsively
+              const size = 240;
               const radius = 90;
               const stroke = 22;
               const center = size / 2;
@@ -116,9 +117,14 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
               });
 
               return (
-                <div className="flex items-center gap-5">
-                  <div className="relative" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} className="block">
+                <div className="flex flex-col sm:flex-row items-center gap-5">
+                  <div className="relative w-full max-w-[280px] aspect-square">
+                    <svg
+                      viewBox={`0 0 ${size} ${size}`}
+                      width="100%"
+                      height="100%"
+                      className="block"
+                    >
                       {/* Background ring */}
                       <circle
                         cx={center}
@@ -157,7 +163,7 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
                   </div>
 
                   {/* Legend */}
-                  <div className="flex-1 space-y-3 min-w-[180px]">
+                  <div className="flex-1 space-y-3 min-w-[180px] w-full">
                     {totals.dist.map((d, i) => (
                       <div key={d.name} className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -167,7 +173,9 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
                           />
                           <span className="text-sm text-[#2C3E50]">{d.name}</span>
                         </div>
-                        <span className="text-sm text-[#2C3E50]">${format(d.value)}</span>
+                        <span className="text-sm text-[#2C3E50]">
+                          ${format(d.value)}
+                        </span>
                       </div>
                     ))}
                   </div>
