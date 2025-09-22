@@ -56,197 +56,191 @@ export default function GroupsOverviewDialog({ open, onOpenChange }: GroupsOverv
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white/80 backdrop-blur-[9px] max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Groups Overview</DialogTitle>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Total Groups</div>
-              <Users className="w-4 h-4 text-[#2C3E50]" />
+      {/* Widen modal and let dialog base handle glass + padding */}
+      <DialogContent className="max-w-4xl p-0">
+        {/* Hero header */}
+        <div className="w-full rounded-t-2xl p-5 border-b border-[#E8E8E8]" style={{ background: "linear-gradient(135deg, #F5F3F0 0%, #FFF7E0 100%)" }}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs text-[#7F8C8D]">Overview</div>
+              <h2 className="text-xl font-semibold text-[#2C3E50]">Your Groups</h2>
+              <div className="text-xs text-[#7F8C8D] mt-1">Snapshot of members, spending, and quick actions</div>
             </div>
-            <div className="text-2xl font-bold mt-2 text-[#2C3E50]">{totals.totalGroups}</div>
-          </div>
-          <div className="rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Members</div>
-              <Users className="w-4 h-4 text-[#2C3E50]" />
-            </div>
-            <div className="text-2xl font-bold mt-2 text-[#2C3E50]">{totals.totalMembers}</div>
-          </div>
-          <div className="rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">Monthly Spend</div>
-              <Wallet className="w-4 h-4 text-[#2C3E50]" />
-            </div>
-            <div className="text-2xl font-bold mt-2 text-[#2C3E50]">${format(totals.totalSpend)}</div>
+            <div className="text-xs px-2 py-1 rounded-full border border-[#E8E8E8] bg-white/70 text-[#2C3E50]">Glass UI • 9px blur</div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Donut */}
-          <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-semibold text-[#2C3E50]">Spending Split</div>
-              <BarChart3 className="w-4 h-4 text-[#2C3E50]" />
+        {/* Body content */}
+        <div className="p-6 space-y-6">
+          {/* Top stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl border border-[#E8E8E8] bg-white/60 p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-[#7F8C8D]">Total Groups</div>
+                <Users className="w-4 h-4 text-[#2C3E50]" />
+              </div>
+              <div className="text-2xl font-bold mt-2 text-[#2C3E50]">{totals.totalGroups}</div>
             </div>
-
-            {/* SVG Donut */}
-            {(() => {
-              const total = totals.dist.reduce((a, d) => a + d.value, 0) || 1;
-              // Increase internal canvas size but render responsively
-              const size = 240;
-              const radius = 90;
-              const stroke = 22;
-              const center = size / 2;
-              const circumference = 2 * Math.PI * radius;
-
-              let cumulative = 0;
-              const segments = totals.dist.map((d, i) => {
-                const frac = d.value / total;
-                const length = frac * circumference;
-                const offset = circumference - cumulative;
-                cumulative += length;
-                return {
-                  color: colors[i % colors.length],
-                  length,
-                  offset,
-                };
-              });
-
-              return (
-                <div className="flex flex-col sm:flex-row items-center gap-5">
-                  <div className="relative w-full max-w-[280px] aspect-square">
-                    <svg
-                      viewBox={`0 0 ${size} ${size}`}
-                      width="100%"
-                      height="100%"
-                      className="block"
-                    >
-                      {/* Background ring */}
-                      <circle
-                        cx={center}
-                        cy={center}
-                        r={radius}
-                        fill="none"
-                        stroke="#F5F3F0"
-                        strokeWidth={stroke}
-                      />
-                      {/* Segments */}
-                      <g transform={`rotate(-90 ${center} ${center})`}>
-                        {segments.map((s, i) => (
-                          <circle
-                            key={i}
-                            cx={center}
-                            cy={center}
-                            r={radius}
-                            fill="none"
-                            stroke={s.color}
-                            strokeWidth={stroke}
-                            strokeDasharray={`${s.length} ${circumference}`}
-                            strokeDashoffset={s.offset}
-                            strokeLinecap="butt"
-                          />
-                        ))}
-                      </g>
-                    </svg>
-
-                    {/* Center label */}
-                    <div className="absolute inset-0 grid place-items-center text-center">
-                      <div className="text-xs text-muted-foreground">Total</div>
-                      <div className="text-xl font-semibold text-[#2C3E50]">
-                        ${format(totals.totalSpend)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Legend */}
-                  <div className="flex-1 space-y-3 min-w-[180px] w-full">
-                    {totals.dist.map((d, i) => (
-                      <div key={d.name} className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="inline-block w-3 h-3 rounded-sm"
-                            style={{ background: colors[i % colors.length] }}
-                          />
-                          <span className="text-sm text-[#2C3E50]">{d.name}</span>
-                        </div>
-                        <span className="text-sm text-[#2C3E50]">
-                          ${format(d.value)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
+            <div className="rounded-xl border border-[#E8E8E8] bg-white/60 p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-[#7F8C8D]">Members</div>
+                <Users className="w-4 h-4 text-[#2C3E50]" />
+              </div>
+              <div className="text-2xl font-bold mt-2 text-[#2C3E50]">{totals.totalMembers}</div>
+            </div>
+            <div className="rounded-xl border border-[#E8E8E8] bg-white/60 p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-[#7F8C8D]">Monthly Spend</div>
+                <Wallet className="w-4 h-4 text-[#2C3E50]" />
+              </div>
+              <div className="text-2xl font-bold mt-2 text-[#2C3E50]">${format(totals.totalSpend)}</div>
+            </div>
           </div>
 
-          {/* Bars */}
-          <div className="md:col-span-3 rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-            <div className="font-semibold text-[#2C3E50] mb-3">Monthly Spend by Group</div>
-            <div className="grid grid-cols-6 items-end gap-3 h-40">
-              {mockGroups.map((g, i) => {
-                const pct = Math.max(8, Math.round((g.monthlySpend / top) * 100));
+          {/* Visuals row */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            {/* Donut */}
+            <div className="md:col-span-2 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-[#2C3E50]">Spending Split</div>
+                <BarChart3 className="w-4 h-4 text-[#2C3E50]" />
+              </div>
+
+              {(() => {
+                const total = totals.dist.reduce((a, d) => a + d.value, 0) || 1;
+                const size = 260;
+                const radius = 96;
+                const stroke = 22;
+                const center = size / 2;
+                const circumference = 2 * Math.PI * radius;
+
+                let cumulative = 0;
+                const segments = totals.dist.map((d, i) => {
+                  const frac = d.value / total;
+                  const length = frac * circumference;
+                  const offset = circumference - cumulative;
+                  cumulative += length;
+                  return {
+                    color: colors[i % colors.length],
+                    length,
+                    offset,
+                    label: d.name,
+                    value: d.value,
+                  };
+                });
+
                 return (
-                  <div key={g.id} className="flex flex-col items-center gap-2">
-                    <div className="w-full min-w-4 rounded-lg bg-[#F5F3F0] border border-[#E8E8E8] overflow-hidden" style={{ height: "100%" }}>
-                      <div
-                        className="w-full rounded-lg"
-                        style={{
-                          height: `${pct}%`,
-                          marginTop: `${100 - pct}%`,
-                          background: colors[i % colors.length],
-                        }}
-                      />
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="relative w-full max-w-[320px] aspect-square">
+                      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" className="block">
+                        <circle cx={center} cy={center} r={radius} fill="none" stroke="#F5F3F0" strokeWidth={stroke} />
+                        <g transform={`rotate(-90 ${center} ${center})`}>
+                          {segments.map((s, i) => (
+                            <circle
+                              key={i}
+                              cx={center}
+                              cy={center}
+                              r={radius}
+                              fill="none"
+                              stroke={s.color}
+                              strokeWidth={stroke}
+                              strokeDasharray={`${s.length} ${circumference}`}
+                              strokeDashoffset={s.offset}
+                              strokeLinecap="butt"
+                            >
+                              <title>{`${s.label}: $${format(s.value)}`}</title>
+                            </circle>
+                          ))}
+                        </g>
+                      </svg>
+
+                      <div className="absolute inset-0 grid place-items-center text-center">
+                        <div className="text-xs text-muted-foreground">Total</div>
+                        <div className="text-xl font-semibold text-[#2C3E50]">${format(totals.totalSpend)}</div>
+                      </div>
                     </div>
-                    <span className="text-[10px] text-muted-foreground text-center leading-tight">
-                      {g.name.split(" ")[0]}
-                    </span>
+
+                    {/* Legend */}
+                    <div className="flex-1 space-y-3 min-w-[200px] w-full">
+                      {totals.dist.map((d, i) => (
+                        <div key={d.name} className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-sm" style={{ background: colors[i % colors.length] }} />
+                            <span className="text-sm text-[#2C3E50]">{d.name}</span>
+                          </div>
+                          <span className="text-sm text-[#2C3E50]">${format(d.value)}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
-              })}
+              })()}
+            </div>
+
+            {/* Bars */}
+            <div className="md:col-span-3 rounded-xl border border-[#E8E8E8] bg-white/70 p-5">
+              <div className="font-semibold text-[#2C3E50] mb-4">Monthly Spend by Group</div>
+              <div className="grid grid-cols-6 items-end gap-3 h-48">
+                {mockGroups.map((g, i) => {
+                  const pct = Math.max(8, Math.round((g.monthlySpend / top) * 100));
+                  return (
+                    <div key={g.id} className="flex flex-col items-center gap-2">
+                      <div className="w-full min-w-4 rounded-lg bg-[#F5F3F0] border border-[#E8E8E8] overflow-hidden" style={{ height: "100%" }}>
+                        <div
+                          className="w-full rounded-lg"
+                          style={{
+                            height: `${pct}%`,
+                            marginTop: `${100 - pct}%`,
+                            background: colors[i % colors.length],
+                          }}
+                          title={`${g.name}: $${format(g.monthlySpend)}`}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground text-center leading-tight">{g.name.split(" ")[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Groups list */}
-        <div className="rounded-xl border border-[#E8E8E8] bg-white/70 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="font-semibold text-[#2C3E50]">Your Groups</div>
-            <div className="text-xs text-muted-foreground">Mock data</div>
-          </div>
-          <div className="space-y-3">
-            {mockGroups.map((g, i) => (
-              <div key={g.id} className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-lg border border-[#E8E8E8] bg-white/60 p-3">
-                <div className="min-w-0">
-                  <div className="font-medium text-[#2C3E50] truncate">{g.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{g.description}</div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-[#2C3E50]">
-                    <span className="text-xs text-muted-foreground mr-1">Members</span>
-                    <span className="font-semibold">{g.members}</span>
+          {/* Groups list */}
+          <div className="rounded-xl border border-[#E8E8E8] bg-white/70">
+            <div className="flex items-center justify-between p-4 border-b border-[#E8E8E8]">
+              <div className="font-semibold text-[#2C3E50]">Your Groups</div>
+              <div className="text-xs text-muted-foreground">Mock data</div>
+            </div>
+            <div className="p-4 space-y-3 max-h-[260px] overflow-y-auto">
+              {mockGroups.map((g, i) => (
+                <div
+                  key={g.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between rounded-lg border border-[#E8E8E8] bg-white/60 p-3"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-[#2C3E50] truncate">{g.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{g.description}</div>
                   </div>
-                  <div className="text-sm text-[#2C3E50]">
-                    <span className="text-xs text-muted-foreground mr-1">Monthly</span>
-                    <span className="font-semibold">
-                      ${format(g.monthlySpend)} {g.currency}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-[#2C3E50]">
+                      <span className="text-xs text-muted-foreground mr-1">Members</span>
+                      <span className="font-semibold">{g.members}</span>
+                    </div>
+                    <div className="text-sm text-[#2C3E50]">
+                      <span className="text-xs text-muted-foreground mr-1">Monthly</span>
+                      <span className="font-semibold">${format(g.monthlySpend)} {g.currency}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" className="h-8" onClick={() => handleCopy(g.inviteCode)} aria-label={`Copy invite for ${g.name}`}>
+                      <Copy className="w-4 h-4 mr-1" /> Invite
+                    </Button>
+                    <Button className="h-8" style={{ background: "#F4D03F", color: "#2C3E50" }} onClick={() => handleOpen(g)} aria-label={`Open ${g.name}`}>
+                      Open <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" className="h-8" onClick={() => handleCopy(g.inviteCode)}>
-                    <Copy className="w-4 h-4 mr-1" /> Invite
-                  </Button>
-                  <Button className="h-8" style={{ background: "#F4D03F", color: "#2C3E50" }} onClick={() => handleOpen(g)}>
-                    Open <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </DialogContent>
